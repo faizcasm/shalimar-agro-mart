@@ -1,0 +1,287 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { business } from "@/lib/data";
+import Reveal from "@/components/Reveal";
+import { IconArrow, IconCheck, IconHandshake, IconPhone, IconWhatsApp } from "@/components/icons";
+
+const businessTypes = [
+  "Retail agri shop",
+  "Distributor / Wholesaler",
+  "Grower / Orchard owner",
+  "Field agent / SAM",
+  "Co-operative society",
+  "Other",
+];
+
+const partnerPerks = [
+  "Territory-wise distribution rights",
+  "Tractor-load pricing on bulk orders",
+  "Product training & marketing material",
+  "Priority supply during peak season",
+];
+
+export default function Partners() {
+  const [status, setStatus] = useState<"idle" | "error" | "sent">("idle");
+  const [message, setMessage] = useState("");
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+
+    const get = (key: string) => String(data.get(key) ?? "").trim();
+
+    const name = get("pName");
+    const firm = get("pFirm");
+    const village = get("pVillage");
+    const district = get("pDistrict");
+    const phone = get("pPhone");
+    const type = get("pType");
+    const note = get("pNote");
+
+    if (!name || !firm || !village || !district || !type) {
+      setStatus("error");
+      setMessage("Please fill in all required fields marked with *.");
+      return;
+    }
+
+    if (!/^[0-9]{10}$/.test(phone.replace(/\s+/g, ""))) {
+      setStatus("error");
+      setMessage("Enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    const lines = [
+      "PARTNER REGISTRATION",
+      `Name: ${name}`,
+      `Firm / Business: ${firm}`,
+      `Type: ${type}`,
+      `Village/Town: ${village}`,
+      `District: ${district}`,
+      `Phone: ${phone}`,
+      note ? `Note: ${note}` : "",
+    ].filter(Boolean);
+
+    setStatus("sent");
+    setMessage("Application received — opening WhatsApp to confirm…");
+
+    window.open(
+      `${business.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+    form.reset();
+  }
+
+  return (
+    <section id="partners" className="relative overflow-hidden bg-forest-deep">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="dot-grid absolute inset-0 opacity-25 [mask-image:radial-gradient(ellipse_70%_60%_at_15%_40%,#000,transparent)]" />
+        <div className="absolute -left-24 bottom-0 h-80 w-80 rounded-full bg-lime/10 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lime/35 to-transparent" />
+      </div>
+
+      <div className="shell relative section">
+        <div className="grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+          {/* ---------- Pitch ---------- */}
+          <div>
+            <Reveal>
+              <span className="eyebrow text-lime">Partner network</span>
+              <h2 className="mt-4 font-display text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-cream">
+                Our partners are the
+                <span className="block text-lime">backbone of Kashmir&rsquo;s orchards.</span>
+              </h2>
+              <p className="mt-5 max-w-lg text-[16.5px] leading-relaxed text-cream/68">
+                Fifty-plus dealers and growers already carry Shalimar products to
+                villages the big distributors never reach. If you stock inputs for
+                your community, there is a place for you in the network.
+              </p>
+            </Reveal>
+
+            <Reveal delay={110}>
+              <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+                {partnerPerks.map((perk) => (
+                  <li
+                    key={perk}
+                    className="flex items-start gap-3 rounded-2xl border border-white/12 bg-white/4 px-4 py-3.5 text-[14px] text-cream/78"
+                  >
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-lime text-forest-deep">
+                      <IconCheck className="h-3 w-3" />
+                    </span>
+                    {perk}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+
+            <Reveal delay={180}>
+              <div className="mt-8 rounded-[1.5rem] border border-dashed border-lime/45 bg-white/4 p-6">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lime/15 text-lime ring-1 ring-lime/35">
+                    <IconHandshake className="h-6 w-6" />
+                  </span>
+                  <div>
+                    <h3 className="font-display text-[18px] font-semibold text-cream">
+                      50+ partners and counting
+                    </h3>
+                    <p className="mt-1.5 text-[14.5px] leading-relaxed text-cream/62">
+                      From Pattan to Shopian, our partners keep shelves stocked and
+                      growers supplied through every spray and harvest season.
+                    </p>
+                  </div>
+                </div>
+
+                <a
+                  href={business.phoneHref}
+                  className="mt-5 inline-flex items-center gap-2 text-[14.5px] font-semibold text-lime transition-transform hover:translate-x-1"
+                >
+                  <IconPhone className="h-4 w-4" />
+                  Talk to the partnership desk · {business.phoneDisplay}
+                </a>
+              </div>
+            </Reveal>
+          </div>
+
+          {/* ---------- Form ---------- */}
+          <Reveal delay={140}>
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-paper p-6 shadow-[0_50px_100px_-55px_rgba(0,0,0,0.95)] sm:p-8">
+              <span className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-lime via-lime-deep to-forest" />
+
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-display text-[24px] font-semibold text-forest">
+                    Partner registration
+                  </h3>
+                  <p className="mt-1.5 text-[14px] text-ink/60">
+                    Takes under a minute — our team calls within 48 hours.
+                  </p>
+                </div>
+                <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-forest text-lime sm:flex">
+                  <IconWhatsApp className="h-6 w-6" />
+                </span>
+              </div>
+
+              <form onSubmit={handleSubmit} noValidate className="mt-7 grid gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="field-label" htmlFor="p-name">
+                      Your name *
+                    </label>
+                    <input id="p-name" name="pName" className="field" placeholder="Full name" />
+                  </div>
+                  <div>
+                    <label className="field-label" htmlFor="p-phone">
+                      Phone / WhatsApp *
+                    </label>
+                    <input
+                      id="p-phone"
+                      name="pPhone"
+                      type="tel"
+                      inputMode="numeric"
+                      className="field"
+                      placeholder="10-digit number"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="field-label" htmlFor="p-firm">
+                    Firm / Business name *
+                  </label>
+                  <input
+                    id="p-firm"
+                    name="pFirm"
+                    className="field"
+                    placeholder="e.g. Bhat Agri Stores"
+                  />
+                </div>
+
+                <div>
+                  <label className="field-label" htmlFor="p-type">
+                    Business type *
+                  </label>
+                  <select id="p-type" name="pType" className="field" defaultValue="">
+                    <option value="" disabled>
+                      Select one
+                    </option>
+                    {businessTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="field-label" htmlFor="p-village">
+                      Village / Town *
+                    </label>
+                    <input id="p-village" name="pVillage" className="field" placeholder="e.g. Palhallan" />
+                  </div>
+                  <div>
+                    <label className="field-label" htmlFor="p-district">
+                      District *
+                    </label>
+                    <input
+                      id="p-district"
+                      name="pDistrict"
+                      className="field"
+                      placeholder="e.g. Baramulla"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="field-label" htmlFor="p-note">
+                    Message
+                  </label>
+                  <textarea
+                    id="p-note"
+                    name="pNote"
+                    rows={3}
+                    className="field resize-none"
+                    placeholder="Current stock, shop size, area you serve…"
+                  />
+                </div>
+
+                {status === "error" && (
+                  <p
+                    role="alert"
+                    className="rounded-xl border border-apple/35 bg-apple/8 px-4 py-3 text-[14px] font-medium text-apple"
+                  >
+                    {message}
+                  </p>
+                )}
+
+                {status === "sent" && (
+                  <p
+                    role="status"
+                    className="flex items-start gap-2.5 rounded-xl border border-lime-deep/40 bg-lime/12 px-4 py-3 text-[14px] font-medium text-forest"
+                  >
+                    <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-lime-deep" />
+                    {message} Prefer to talk? Call{" "}
+                    <a href={business.phoneHref} className="font-bold underline">
+                      {business.phoneDisplay}
+                    </a>
+                    .
+                  </p>
+                )}
+
+                <button type="submit" className="btn btn-forest mt-1 w-full !py-4">
+                  Submit application
+                  <IconArrow className="h-4 w-4" />
+                </button>
+
+                <p className="text-center text-[12.5px] leading-relaxed text-ink/50">
+                  Your details are used only to contact you about partnering.
+                </p>
+              </form>
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
