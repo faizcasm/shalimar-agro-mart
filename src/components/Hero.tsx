@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { business } from "@/lib/data";
-import { IconArrow, IconCheck, IconPhone, IconPin, IconSprout } from "@/components/icons";
+import { IconArrow, IconCheck, IconHandshake, IconPhone, IconPin, IconSprout } from "@/components/icons";
 
 const trustPoints = [
   "Lab report + fertilizer plan in 10 days",
@@ -45,9 +45,9 @@ export default function Hero() {
                 Book a Soil Test
                 <IconArrow className="h-4 w-4" />
               </a>
-              <a href={business.phoneHref} className="btn btn-ghost">
-                <IconPhone className="h-4 w-4" />
-                {business.phoneDisplay}
+              <a href="#partner-form" className="btn btn-ghost">
+                <IconHandshake className="h-4 w-4" />
+                Become a Partner
               </a>
             </div>
 

@@ -72,7 +72,7 @@ export default function BookSoilTest() {
   }
 
   return (
-    <section id="soil-test" className="section bg-cream">
+    <section id="soil-test" className="section scroll-mt-28 bg-cream">
       <div className="shell">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           {/* ---------- Steps ---------- */}

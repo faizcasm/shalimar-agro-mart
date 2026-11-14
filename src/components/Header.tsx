@@ -156,11 +156,11 @@ export default function Header() {
             </nav>
 
             <div className="flex items-center gap-2.5">
-              <a href={business.phoneHref} className="hidden sm:block">
+              <Link href="#soil-test" className="hidden sm:block">
                 <span className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
                   Book a Soil Test
                 </span>
-              </a>
+              </Link>
 
               <button
                 type="button"
