@@ -2,14 +2,33 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { business, nav } from "@/lib/data";
+import { business, nav, navSectionId } from "@/lib/data";
 import { IconClose, IconMail, IconMenu, IconPhone, IconPin } from "@/components/icons";
 
 export default function Header() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState<string>("#home");
+  // Scroll-spy target on the home page (set from the IntersectionObserver).
+  const [spyActive, setSpyActive] = useState<string>("/#home");
+
+  // On dedicated pages the matching route item is highlighted; on the home
+  // page the section currently in view decides.
+  const active =
+    pathname !== "/"
+      ? nav.some((item) => item.href === pathname)
+        ? pathname
+        : ""
+      : spyActive;
+
+  // "Book a Soil Test" scrolls to the form on the pages that have it;
+  // everywhere else it opens the dedicated soil-testing page at the form.
+  const soilCtaHref =
+    pathname === "/" || pathname === "/soil-testing"
+      ? "#soil-test"
+      : "/soil-testing#soil-test";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -26,18 +45,26 @@ export default function Header() {
     };
   }, [open]);
 
-  // Highlight the section currently in view.
-  // `#partner-form` lives inside `#partners`, so observe the section but
-  // map the highlight back to the nav item's own href.
+  // Highlight the nav item for the current destination.
+  // On the home page, scroll-spy the sections each nav item maps to
+  // (`/#…` items and the sections behind `/soil-testing` → `#soil-test`,
+  // `/become-a-partner` → `#partners`). On dedicated pages, highlight the
+  // route item that matches the pathname.
   useEffect(() => {
+    if (pathname !== "/") return;
+
     const seen = new Set<string>();
     const targets: { el: HTMLElement; href: string }[] = [];
 
     nav.forEach((item) => {
-      const id = item.href === "#partner-form" ? "partners" : item.href.slice(1);
-      if (seen.has(id)) return;
+      const id = navSectionId(item.href);
+      if (!id || seen.has(id)) return;
       seen.add(id);
-      const el = document.getElementById(id);
+      // Cached routes (cacheComponents/Activity) keep hidden copies of other
+      // pages in the DOM, so IDs can repeat — observe only the visible one.
+      const el = [...document.querySelectorAll<HTMLElement>(`[id="${id}"]`)].find(
+        (m) => m.getClientRects().length > 0,
+      );
       if (el) targets.push({ el, href: item.href });
     });
 
@@ -48,7 +75,7 @@ export default function Header() {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           const match = targets.find((t) => t.el === entry.target);
-          if (match) setActive(match.href);
+          if (match) setSpyActive(match.href);
         });
       },
       { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
@@ -56,7 +83,7 @@ export default function Header() {
 
     targets.forEach(({ el }) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
 
   return (
     <>
@@ -109,7 +136,7 @@ export default function Header() {
             }`}
           >
             <Link
-              href="#home"
+              href="/#home"
               onClick={() => setOpen(false)}
               className="group flex items-center gap-3"
               aria-label={`${business.name} home`}
@@ -156,7 +183,7 @@ export default function Header() {
             </nav>
 
             <div className="flex items-center gap-2.5">
-              <Link href="#soil-test" className="hidden sm:block">
+              <Link href={soilCtaHref} className="hidden sm:block">
                 <span className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
                   Book a Soil Test
                 </span>

@@ -54,15 +54,25 @@ export const stats = [
   },
 ] as const;
 
+/* Hash items (`/#…`) scroll sections on the home page and navigate home from
+   any other route; path items open their own dedicated page. */
 export const nav = [
-  { label: "Home", href: "#home" },
-  { label: "About", href: "#about" },
-  { label: "Services", href: "#services" },
-  { label: "Soil Test", href: "#soil-test" },
-  { label: "Become a Partner", href: "#partner-form" },
-  { label: "Stories", href: "#stories" },
-  { label: "Contact", href: "#contact" },
+  { label: "Home", href: "/#home" },
+  { label: "About", href: "/#about" },
+  { label: "Services", href: "/#services" },
+  { label: "Soil Testing", href: "/soil-testing" },
+  { label: "Become a Partner", href: "/become-a-partner" },
+  { label: "Stories", href: "/#stories" },
+  { label: "Contact", href: "/#contact" },
 ] as const;
+
+/** Section on the home page that represents each nav destination. */
+export function navSectionId(href: string): string | null {
+  if (href === "/soil-testing") return "soil-test";
+  if (href === "/become-a-partner") return "partners";
+  if (href.startsWith("/#")) return href.slice(2);
+  return null;
+}
 
 /* ---------- Why soil testing (from the "Why Soil Testing is Important" poster) ---------- */
 export const soilReasons = [
@@ -159,7 +169,7 @@ export const audiences = [
     title: "Book a soil test for your orchard",
     body: "Send us your village and crop. We'll schedule a sample pickup and return a full report with a fertilizer plan.",
     cta: "Book a soil test",
-    href: "#soil-test",
+    href: "/soil-testing#soil-test",
     tone: "lime" as const,
   },
   {
@@ -168,7 +178,7 @@ export const audiences = [
     title: "Become a Shalimar partner",
     body: "Stock a brand orchards already trust. Fill the partner form and our team will call you within 48 hours.",
     cta: "Apply as a partner",
-    href: "#partners",
+    href: "/become-a-partner#partner-form",
     tone: "forest" as const,
   },
 ];
