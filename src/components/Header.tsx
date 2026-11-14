@@ -26,25 +26,35 @@ export default function Header() {
     };
   }, [open]);
 
-  // Highlight the section currently in view
+  // Highlight the section currently in view.
+  // `#partner-form` lives inside `#partners`, so observe the section but
+  // map the highlight back to the nav item's own href.
   useEffect(() => {
-    const ids = nav.map((n) => n.href.slice(1));
-    const sections = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => Boolean(el));
+    const seen = new Set<string>();
+    const targets: { el: HTMLElement; href: string }[] = [];
 
-    if (!sections.length || typeof IntersectionObserver === "undefined") return;
+    nav.forEach((item) => {
+      const id = item.href === "#partner-form" ? "partners" : item.href.slice(1);
+      if (seen.has(id)) return;
+      seen.add(id);
+      const el = document.getElementById(id);
+      if (el) targets.push({ el, href: item.href });
+    });
+
+    if (!targets.length || typeof IntersectionObserver === "undefined") return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) setActive(`#${entry.target.id}`);
+          if (!entry.isIntersecting) return;
+          const match = targets.find((t) => t.el === entry.target);
+          if (match) setActive(match.href);
         });
       },
       { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
     );
 
-    sections.forEach((el) => observer.observe(el));
+    targets.forEach(({ el }) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
