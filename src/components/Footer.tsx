@@ -49,8 +49,7 @@ export default function Footer() {
 
             <p className="mt-4 max-w-sm text-[14.5px] leading-relaxed text-cream/60">
               Soil testing, orchard nutrition and genuine crop inputs for growers
-              across Jammu &amp; Kashmir — from {business.locality} to every valley
-              orchard we can reach.
+              across every valley orchard in {business.region}.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2.5">
@@ -130,7 +129,9 @@ export default function Footer() {
               © {year} {business.name}. All rights reserved.
             </p>
             <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span>{business.locality}, {business.region}</span>
+              <span>
+                {business.region}, {business.country}
+              </span>
               <span className="hidden text-lime/60 sm:inline">·</span>
               <span>1000+ tests · 50+ partners</span>
             </p>

@@ -189,7 +189,7 @@ export default function BookSoilTest() {
                       id="st-village"
                       name="village"
                       className="field"
-                      placeholder="e.g. Palhallan"
+                      placeholder="e.g. Sopore"
                     />
                   </div>
                   <div>

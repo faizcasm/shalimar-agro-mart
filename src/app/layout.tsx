@@ -19,9 +19,9 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const siteTitle = `${business.name} — Soil Testing & Orchard Solutions in Pattan, Kashmir`;
+const siteTitle = `${business.name} — Soil Testing & Orchard Solutions in Jammu & Kashmir`;
 const siteDescription =
-  "Shalimar Agro Mart provides soil testing, orchard nutrition advisory and genuine crop inputs to growers across Jammu & Kashmir. Based in Palhallan, Pattan. 1000+ tests, 50+ partners. Call 9070999299.";
+  "Shalimar Agro Mart provides soil testing, orchard nutrition advisory and genuine crop inputs to growers across Jammu & Kashmir. 1000+ soil tests, 50+ partners. Call 9070999299.";
 
 export const metadata: Metadata = {
   // Set NEXT_PUBLIC_SITE_URL when deploying so social cards resolve correctly.
@@ -91,14 +91,12 @@ const localBusinessJsonld = {
   priceRange: "₹₹",
   address: {
     "@type": "PostalAddress",
-    streetAddress: "Palhallan",
-    addressLocality: "Pattan",
     addressRegion: "Jammu & Kashmir",
     addressCountry: "IN",
   },
   geo: {
     "@type": "GeoCoordinates",
-    // Approximate coordinates for Palhallan, Pattan (Baramulla, J&K)
+    // Approximate service-area coordinates (Jammu & Kashmir)
     latitude: 34.1766,
     longitude: 74.3486,
   },

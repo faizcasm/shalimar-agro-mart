@@ -118,15 +118,17 @@ all edited from that one file — no component changes needed.
 
 ## Content notes
 
-- **Contact details** — `9070999299` · `shalimaragromart@gmail.com` · Palhallan,
-  Pattan, Baramulla, Jammu & Kashmir.
+- **Contact details** — `9070999299` · `shalimaragromart@gmail.com` ·
+  Jammu & Kashmir, India (shown as the address site-wide; the precise store
+  location is used only by the map and by search metadata).
 - **Testimonial quotes** are taken verbatim from the supplied testimonial
   artwork. Dr. Irfan Rashid's name appears on the original image; the other two
   artworks carried no printed name and were completed with the names supplied by
   the client.
 - **Opening hours** (`Mon – Sat · 9:00 AM – 7:00 PM`) are a sensible default —
   update them in `src/lib/data.ts` to the real hours.
-- **Map** is a keyless Google Maps embed centred on Palhallan, Pattan.
+- **Map** is a keyless Google Maps embed. Search metadata and the embed keep the
+  precise store locality so the business stays findable in local search.
 
 ---
 

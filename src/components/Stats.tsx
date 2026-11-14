@@ -25,24 +25,69 @@ export default function Stats() {
           </Reveal>
 
           <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-5">
-            {stats.map((stat, i) => (
-              <Reveal key={stat.label} delay={i * 90}>
-                <div className="card card-hover flex h-full flex-col justify-between p-5 sm:p-7">
-                  <div className="font-display text-[clamp(2rem,5vw,3.25rem)] font-semibold leading-none tracking-[-0.04em] text-forest">
-                    {stat.count ? (
-                      <Counter value={stat.value as number} suffix={stat.suffix} />
-                    ) : (
-                      <span>{stat.value}</span>
+            {stats.map((stat, i) => {
+              // The "No. 1 in J&K" tile gets a featured treatment so it pops.
+              const featured = !stat.count;
+
+              return (
+                <Reveal key={stat.label} delay={i * 90}>
+                  <div
+                    className={`relative flex h-full flex-col justify-between overflow-hidden rounded-[1.5rem] border p-5 transition-all duration-500 ease-out hover:-translate-y-1.5 sm:p-7 ${
+                      featured
+                        ? "border-lime/45 bg-[linear-gradient(150deg,#12501f_0%,#083204_48%,#021d04_100%)] shadow-[0_36px_70px_-34px_rgba(8,50,4,0.95)]"
+                        : "border-ink/10 bg-[linear-gradient(180deg,#fffdf6_0%,#f3eeda_100%)] shadow-[0_20px_46px_-34px_rgba(8,50,4,0.65)] hover:border-lime-deep/50"
+                    }`}
+                  >
+                    {/* premium surface texture */}
+                    <span
+                      className={`pointer-events-none absolute inset-0 ${
+                        featured
+                          ? "dot-grid opacity-45"
+                          : "bg-[radial-gradient(120%_80%_at_50%_0%,rgba(186,242,0,0.16),transparent_62%)]"
+                      }`}
+                    />
+                    {featured && (
+                      <span className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-lime/25 blur-2xl" />
                     )}
+
+                    <div
+                      className={`relative font-display text-[clamp(2rem,5vw,3.25rem)] font-semibold leading-none tracking-[-0.04em] ${
+                        featured ? "text-lime" : "text-forest"
+                      }`}
+                    >
+                      {stat.count ? (
+                        <Counter value={stat.value as number} suffix={stat.suffix} />
+                      ) : (
+                        <span>{stat.value}</span>
+                      )}
+                    </div>
+
+                    <div className="relative mt-4">
+                      <div
+                        className={`text-[14.5px] font-semibold ${
+                          featured ? "text-cream" : "text-ink"
+                        }`}
+                      >
+                        {stat.label}
+                      </div>
+                      <div
+                        className={`mt-1 text-[13px] ${
+                          featured ? "text-cream/65" : "text-ink/55"
+                        }`}
+                      >
+                        {stat.detail}
+                      </div>
+                    </div>
+
+                    <div
+                      className={`relative mt-5 h-1 w-10 rounded-full ${
+                        featured ? "bg-lime" : "bg-lime-deep"
+                      }`}
+                    />
                   </div>
-                  <div className="mt-4">
-                    <div className="text-[14.5px] font-semibold text-ink">{stat.label}</div>
-                    <div className="mt-1 text-[13px] text-ink/55">{stat.detail}</div>
-                  </div>
-                  <div className="mt-5 h-1 w-10 rounded-full bg-lime" />
-                </div>
-              </Reveal>
-            ))}
+                </Reveal>
+              );
+            })}
           </div>
         </div>
       </section>

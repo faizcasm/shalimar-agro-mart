@@ -91,11 +91,11 @@ export default function Contact() {
     {
       icon: IconPin,
       label: "Visit the store",
-      value: business.locality,
+      value: business.addressLine,
       href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
         business.mapQuery,
       )}`,
-      sub: `${business.district}, ${business.region}`,
+      sub: "Call for exact directions",
       valueClass: "",
     },
   ];
@@ -108,8 +108,8 @@ export default function Contact() {
             <div>
               <span className="eyebrow text-lime-deep">Get in touch</span>
               <h2 className="mt-4 max-w-2xl font-display text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-forest">
-                Come see us in
-                <span className="text-lime-deep"> {business.locality}.</span>
+                We love to
+                <span className="text-lime-deep"> hear from you.</span>
               </h2>
             </div>
             <p className="max-w-sm text-[15px] leading-relaxed text-ink/60">

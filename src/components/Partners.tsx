@@ -15,10 +15,10 @@ const businessTypes = [
 ];
 
 const partnerPerks = [
-  "Territory-wise distribution rights",
-  "Tractor-load pricing on bulk orders",
-  "Product training & marketing material",
-  "Priority supply during peak season",
+  "Extra income for your business",
+  "Your farmers stay loyal to you",
+  "Priority supply in peak season",
+  "Training & marketing support",
 ];
 
 export default function Partners() {
@@ -87,15 +87,22 @@ export default function Partners() {
           {/* ---------- Pitch ---------- */}
           <div>
             <Reveal>
-              <span className="eyebrow text-lime">Partner network</span>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <span className="eyebrow text-lime">Partner network</span>
+                <a href="#partner-form" className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
+                  Become our partner
+                  <IconArrow className="h-4 w-4" />
+                </a>
+              </div>
+
               <h2 className="mt-4 font-display text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-cream">
                 Our partners are the
                 <span className="block text-lime">backbone of Kashmir&rsquo;s orchards.</span>
               </h2>
               <p className="mt-5 max-w-lg text-[16.5px] leading-relaxed text-cream/68">
-                Fifty-plus dealers and growers already carry Shalimar products to
-                villages the big distributors never reach. If you stock inputs for
-                your community, there is a place for you in the network.
+                If you are a pesticide dealer or an agent, join hands with Shalimar
+                Agro Mart and help advance Kashmir&rsquo;s agriculture and
+                horticulture — starting with soil testing.
               </p>
             </Reveal>
 
@@ -123,11 +130,12 @@ export default function Partners() {
                   </span>
                   <div>
                     <h3 className="font-display text-[18px] font-semibold text-cream">
-                      50+ partners and counting
+                      50+ distributors &amp; agents
                     </h3>
                     <p className="mt-1.5 text-[14.5px] leading-relaxed text-cream/62">
-                      From Pattan to Shopian, our partners keep shelves stocked and
-                      growers supplied through every spray and harvest season.
+                      They work with us and send their soil samples to be tested in
+                      J&amp;K&rsquo;s highest-standard lab. You can become part of it
+                      too.
                     </p>
                   </div>
                 </div>
@@ -145,7 +153,10 @@ export default function Partners() {
 
           {/* ---------- Form ---------- */}
           <Reveal delay={140}>
-            <div className="relative overflow-hidden rounded-[1.75rem] bg-paper p-6 shadow-[0_50px_100px_-55px_rgba(0,0,0,0.95)] sm:p-8">
+            <div
+              id="partner-form"
+              className="relative scroll-mt-28 overflow-hidden rounded-[1.75rem] bg-paper p-6 shadow-[0_50px_100px_-55px_rgba(0,0,0,0.95)] sm:p-8"
+            >
               <span className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-lime via-lime-deep to-forest" />
 
               <div className="flex items-start justify-between gap-4">
@@ -218,7 +229,7 @@ export default function Partners() {
                     <label className="field-label" htmlFor="p-village">
                       Village / Town *
                     </label>
-                    <input id="p-village" name="pVillage" className="field" placeholder="e.g. Palhallan" />
+                    <input id="p-village" name="pVillage" className="field" placeholder="e.g. Sopore" />
                   </div>
                   <div>
                     <label className="field-label" htmlFor="p-district">
@@ -242,7 +253,7 @@ export default function Partners() {
                     name="pNote"
                     rows={3}
                     className="field resize-none"
-                    placeholder="Current stock, shop size, area you serve…"
+                    placeholder="Will you allow other agents in my village?"
                   />
                 </div>
 

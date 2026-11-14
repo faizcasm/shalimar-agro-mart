@@ -26,7 +26,7 @@ export default function Hero() {
           {/* ---------- Copy ---------- */}
           <div className="animate-fade-up">
             <span className="eyebrow text-lime">
-              {business.locality} · {business.region}
+              {business.region} · {business.country}
             </span>
 
             <h1 className="mt-6 font-display text-[clamp(2.5rem,7vw,4.75rem)] font-semibold leading-[1.02] tracking-[-0.03em] text-cream">

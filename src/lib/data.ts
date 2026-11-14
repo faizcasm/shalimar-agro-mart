@@ -15,7 +15,9 @@ export const business = {
   locality: "Palhallan, Pattan",
   district: "Baramulla",
   region: "Jammu & Kashmir",
-  addressLine: "Palhallan, Pattan, Baramulla, Jammu & Kashmir",
+  country: "India",
+  // Shown as the address everywhere on the page.
+  addressLine: "Jammu & Kashmir, India",
   hours: "Mon – Sat · 9:00 AM – 7:00 PM",
   hoursNote: "Sunday & harvest season: open on request",
   mapQuery: "Palhallan, Pattan, Jammu & Kashmir",
@@ -46,7 +48,7 @@ export const stats = [
   {
     value: "No. 1",
     suffix: "",
-    label: "In Pattan",
+    label: "In J&K",
     detail: "for agri inputs & testing",
     count: false,
   },
@@ -118,7 +120,7 @@ export const services = [
   {
     icon: "handshake",
     title: "Dealer & Distributor Network",
-    body: "50+ partners across Jammu & Kashmir stock and resupply our range, so inputs reach your village without delay.",
+    body: "50+ distributors and agents stock and resupply our range, so inputs reach your village without delay.",
     tag: "50+ partners",
   },
   {
@@ -241,6 +243,6 @@ export const faqs = [
   },
   {
     q: "Do you deliver inputs to my village?",
-    a: "Yes. With 50+ dealer partners across Jammu & Kashmir, products are dispatched through the network closest to you.",
+    a: "Yes — we deliver everything your orchard needs for treatment, including lime, gypsum and other recommended inputs, to maintain soil and apple tree health exactly as advised in your soil health report.",
   },
 ] as const;
