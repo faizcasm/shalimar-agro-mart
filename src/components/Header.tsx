@@ -22,10 +22,9 @@ export default function Header() {
       ? spyActive === href
       : href.split("#")[0] === pathname;
 
-  // "Book a Soil Test" opens the dedicated soil-testing page and lands on
-  // the form; RouteLink turns it into a plain in-page anchor when we are
-  // already on that page.
-  const soilCtaHref = "/soil-testing#soil-test";
+  // "Book a Soil Test" opens the registration page at the form; RouteLink
+  // turns it into a plain in-page anchor when we are already on that page.
+  const soilCtaHref = "/testsoilregistration#soil-test";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);

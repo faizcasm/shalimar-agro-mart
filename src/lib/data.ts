@@ -55,14 +55,14 @@ export const stats = [
 ] as const;
 
 /* Hash items (`/#…`) scroll sections on the home page and navigate home from
-   any other route; path items open their own dedicated page — and carry a
-   hash so the visitor lands straight on that page's form. */
+   any other route; path items open their own dedicated page. Menu items go to
+   the info pages — CTA buttons go to the registration pages with the forms. */
 export const nav = [
   { label: "Home", href: "/#home" },
   { label: "About", href: "/#about" },
   { label: "Services", href: "/#services" },
-  { label: "Soil Testing", href: "/soil-testing#soil-test" },
-  { label: "Become a Partner", href: "/become-a-partner#partner-form" },
+  { label: "Soil Testing", href: "/soil-testing" },
+  { label: "Become a Partner", href: "/become-a-partner" },
   { label: "Stories", href: "/#stories" },
   { label: "Contact", href: "/#contact" },
 ] as const;
@@ -171,7 +171,7 @@ export const audiences = [
     title: "Book a soil test for your orchard",
     body: "Send us your village and crop. We'll schedule a sample pickup and return a full report with a fertilizer plan.",
     cta: "Book a soil test",
-    href: "/soil-testing#soil-test",
+    href: "/testsoilregistration#soil-test",
     tone: "lime" as const,
   },
   {
@@ -180,7 +180,7 @@ export const audiences = [
     title: "Become a Shalimar partner",
     body: "Stock a brand orchards already trust. Fill the partner form and our team will call you within 48 hours.",
     cta: "Apply as a partner",
-    href: "/become-a-partner#partner-form",
+    href: "/partnerregistration#partner-form",
     tone: "forest" as const,
   },
 ];

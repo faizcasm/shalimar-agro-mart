@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import WhySoilTesting from "@/components/WhySoilTesting";
-import BookSoilTest from "@/components/BookSoilTest";
 import Faq from "@/components/Faq";
 import Contact from "@/components/Contact";
 import Reveal from "@/components/Reveal";
+import RouteLink from "@/components/RouteLink";
 import { business } from "@/lib/data";
 import {
   IconApple,
@@ -104,10 +104,10 @@ export default function SoilTestingPage() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a href="#soil-test" className="btn btn-lime">
+            <RouteLink href="/testsoilregistration#soil-test" className="btn btn-lime">
               Book a soil test
               <IconArrow className="h-4 w-4" />
-            </a>
+            </RouteLink>
             <a href={business.phoneHref} className="btn btn-ghost">
               <IconPhone className="h-4 w-4" />
               {business.phoneDisplay}
@@ -177,10 +177,10 @@ export default function SoilTestingPage() {
 
           <Reveal delay={120}>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <a href="#soil-test" className="btn btn-forest">
+              <RouteLink href="/testsoilregistration#soil-test" className="btn btn-forest">
                 Book a soil test for your field
                 <IconArrow className="h-4 w-4" />
-              </a>
+              </RouteLink>
               <p className="text-[14.5px] text-ink/60">
                 Not sure if your field needs a test?{" "}
                 <a
@@ -196,8 +196,32 @@ export default function SoilTestingPage() {
         </div>
       </section>
 
-      {/* ---------- Booking form ---------- */}
-      <BookSoilTest />
+      {/* ---------- Booking info CTA ---------- */}
+      <section className="section bg-forest">
+        <div className="shell relative">
+          <div className="overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/5 p-7 sm:p-10">
+            <span className="eyebrow text-lime">Ready when you are</span>
+            <h2 className="mt-4 max-w-2xl font-display text-[clamp(1.8rem,3.8vw,2.75rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-cream">
+              Book your soil test — <span className="text-lime">report in 10 days.</span>
+            </h2>
+            <p className="mt-4 max-w-xl text-[15.5px] leading-relaxed text-cream/68">
+              One short form is all it takes. Tell us your village, district and
+              crop — we handle the sample pickup, the lab analysis and the
+              fertilizer plan.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <RouteLink href="/testsoilregistration#soil-test" className="btn btn-lime">
+                Fill the registration form
+                <IconArrow className="h-4 w-4" />
+              </RouteLink>
+              <a href={business.phoneHref} className="btn btn-ghost">
+                <IconPhone className="h-4 w-4" />
+                {business.phoneDisplay}
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ---------- FAQ ---------- */}
       <Faq />

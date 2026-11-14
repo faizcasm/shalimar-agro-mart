@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Stats from "@/components/Stats";
-import Partners from "@/components/Partners";
 import Contact from "@/components/Contact";
 import Reveal from "@/components/Reveal";
+import RouteLink from "@/components/RouteLink";
 import { business } from "@/lib/data";
 import { IconArrow, IconCheck, IconHandshake, IconPhone } from "@/components/icons";
 
@@ -69,10 +69,10 @@ export default function BecomeAPartnerPage() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a href="#partner-form" className="btn btn-lime">
+            <RouteLink href="/partnerregistration#partner-form" className="btn btn-lime">
               Apply as a partner
               <IconArrow className="h-4 w-4" />
-            </a>
+            </RouteLink>
             <a href={business.phoneHref} className="btn btn-ghost">
               <IconPhone className="h-4 w-4" />
               Talk to the partnership desk
@@ -103,10 +103,7 @@ export default function BecomeAPartnerPage() {
       {/* ---------- Proof numbers ---------- */}
       <Stats />
 
-      {/* ---------- Partner pitch + form ---------- */}
-      <Partners />
-
-      {/* ---------- How joining works ---------- */}
+      {/* ---------- Why partner with us ---------- */}
       <section className="section bg-cream">
         <div className="shell">
           <Reveal>
@@ -159,10 +156,10 @@ export default function BecomeAPartnerPage() {
 
           <Reveal delay={140}>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <a href="#partner-form" className="btn btn-forest">
+              <RouteLink href="/partnerregistration#partner-form" className="btn btn-forest">
                 Fill the partner form
                 <IconArrow className="h-4 w-4" />
-              </a>
+              </RouteLink>
               <p className="text-[14.5px] text-ink/60">
                 Prefer to talk first?{" "}
                 <a
@@ -175,6 +172,32 @@ export default function BecomeAPartnerPage() {
               </p>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* ---------- Registration CTA ---------- */}
+      <section className="section bg-forest-deep">
+        <div className="shell relative">
+          <div className="overflow-hidden rounded-[1.75rem] border border-white/12 bg-white/5 p-7 sm:p-10">
+            <span className="eyebrow text-lime">Ready to join?</span>
+            <h2 className="mt-4 max-w-2xl font-display text-[clamp(1.8rem,3.8vw,2.75rem)] font-semibold leading-[1.1] tracking-[-0.02em] text-cream">
+              Fill the partner form — <span className="text-lime">we call within 48 hours.</span>
+            </h2>
+            <p className="mt-4 max-w-xl text-[15.5px] leading-relaxed text-cream/68">
+              Name, firm, phone and district — that is all it takes to start.
+              Our partnership desk takes it from there.
+            </p>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <RouteLink href="/partnerregistration#partner-form" className="btn btn-lime">
+                Fill the registration form
+                <IconArrow className="h-4 w-4" />
+              </RouteLink>
+              <a href={business.phoneHref} className="btn btn-ghost">
+                <IconPhone className="h-4 w-4" />
+                {business.phoneDisplay}
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 

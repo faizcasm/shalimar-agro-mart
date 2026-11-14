@@ -90,7 +90,7 @@ export default function Partners() {
             <Reveal>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <span className="eyebrow text-lime">Partner network</span>
-                <RouteLink href="/become-a-partner#partner-form" className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
+                <RouteLink href="/partnerregistration#partner-form" className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
                   Become our partner
                   <IconArrow className="h-4 w-4" />
                 </RouteLink>

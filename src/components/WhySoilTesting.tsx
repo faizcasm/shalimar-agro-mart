@@ -85,7 +85,7 @@ export default function WhySoilTesting() {
 
             <Reveal delay={140}>
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <RouteLink href="/soil-testing#soil-test" className="btn btn-forest">
+                <RouteLink href="/testsoilregistration#soil-test" className="btn btn-forest">
                   Test my soil
                   <IconArrow className="h-4 w-4" />
                 </RouteLink>

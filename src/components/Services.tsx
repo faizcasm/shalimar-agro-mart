@@ -74,7 +74,7 @@ export default function Services() {
                 Send us your village and crop. We schedule a sample pickup and
                 return a full report with a fertilizer plan in about 10 days.
               </p>
-              <Link href="/soil-testing#soil-test" className="btn btn-forest mt-7">
+              <Link href="/testsoilregistration#soil-test" className="btn btn-forest mt-7">
                 Book a soil test
                 <IconArrow className="h-4 w-4" />
               </Link>
@@ -93,7 +93,7 @@ export default function Services() {
                 Stock a brand orchards already trust. Fill the partner form and our
                 team will call you within 48 hours.
               </p>
-              <Link href="/become-a-partner#partner-form" className="btn btn-lime mt-7">
+              <Link href="/partnerregistration#partner-form" className="btn btn-lime mt-7">
                 Apply as a partner
                 <IconArrow className="h-4 w-4" />
               </Link>

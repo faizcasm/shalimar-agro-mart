@@ -42,11 +42,11 @@ export default function Hero() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3.5">
-              <Link href="/soil-testing#soil-test" className="btn btn-lime">
+              <Link href="/testsoilregistration#soil-test" className="btn btn-lime">
                 Book a Soil Test
                 <IconArrow className="h-4 w-4" />
               </Link>
-              <Link href="/become-a-partner#partner-form" className="btn btn-ghost">
+              <Link href="/partnerregistration#partner-form" className="btn btn-ghost">
                 <IconHandshake className="h-4 w-4" />
                 Become a Partner
               </Link>
