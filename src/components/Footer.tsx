@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import { business, nav } from "@/lib/data";
+import RouteLink from "@/components/RouteLink";
 import {
   IconClock,
   IconMail,
@@ -72,13 +72,13 @@ export default function Footer() {
             <ul className="mt-5 grid gap-3">
               {nav.map((item) => (
                 <li key={item.href}>
-                  <Link
+                  <RouteLink
                     href={item.href}
                     className="group inline-flex items-center gap-2 text-[14.5px] text-cream/68 transition-colors hover:text-lime"
                   >
                     <span className="h-px w-4 bg-cream/30 transition-all duration-300 group-hover:w-6 group-hover:bg-lime" />
                     {item.label}
-                  </Link>
+                  </RouteLink>
                 </li>
               ))}
             </ul>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { business } from "@/lib/data";
 import { IconArrow, IconCheck, IconHandshake, IconPhone, IconPin, IconSprout } from "@/components/icons";
 
@@ -41,14 +42,14 @@ export default function Hero() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3.5">
-              <a href="#soil-test" className="btn btn-lime">
+              <Link href="/soil-testing#soil-test" className="btn btn-lime">
                 Book a Soil Test
                 <IconArrow className="h-4 w-4" />
-              </a>
-              <a href="#partner-form" className="btn btn-ghost">
+              </Link>
+              <Link href="/become-a-partner#partner-form" className="btn btn-ghost">
                 <IconHandshake className="h-4 w-4" />
                 Become a Partner
-              </a>
+              </Link>
             </div>
 
             <ul className="mt-10 grid max-w-xl gap-3 border-t border-white/12 pt-7 sm:grid-cols-1">

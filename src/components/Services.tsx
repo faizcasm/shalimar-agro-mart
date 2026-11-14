@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { services } from "@/lib/data";
 import Reveal from "@/components/Reveal";
 import { IconArrow, serviceIcons } from "@/components/icons";
@@ -73,10 +74,10 @@ export default function Services() {
                 Send us your village and crop. We schedule a sample pickup and
                 return a full report with a fertilizer plan in about 10 days.
               </p>
-              <a href="#soil-test" className="btn btn-forest mt-7">
+              <Link href="/soil-testing#soil-test" className="btn btn-forest mt-7">
                 Book a soil test
                 <IconArrow className="h-4 w-4" />
-              </a>
+              </Link>
 
               <span className="pointer-events-none absolute -bottom-10 -right-8 h-44 w-44 rounded-full border-[14px] border-forest-deep/10" />
             </div>
@@ -92,10 +93,10 @@ export default function Services() {
                 Stock a brand orchards already trust. Fill the partner form and our
                 team will call you within 48 hours.
               </p>
-              <a href="#partners" className="btn btn-lime mt-7">
+              <Link href="/become-a-partner#partner-form" className="btn btn-lime mt-7">
                 Apply as a partner
                 <IconArrow className="h-4 w-4" />
-              </a>
+              </Link>
 
               <span className="dot-grid pointer-events-none absolute inset-0 opacity-40" />
             </div>

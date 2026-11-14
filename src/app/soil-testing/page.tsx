@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import WhySoilTesting from "@/components/WhySoilTesting";
 import BookSoilTest from "@/components/BookSoilTest";
 import Faq from "@/components/Faq";
@@ -105,10 +104,10 @@ export default function SoilTestingPage() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="#soil-test" className="btn btn-lime">
+            <a href="#soil-test" className="btn btn-lime">
               Book a soil test
               <IconArrow className="h-4 w-4" />
-            </Link>
+            </a>
             <a href={business.phoneHref} className="btn btn-ghost">
               <IconPhone className="h-4 w-4" />
               {business.phoneDisplay}
@@ -178,10 +177,10 @@ export default function SoilTestingPage() {
 
           <Reveal delay={120}>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <Link href="#soil-test" className="btn btn-forest">
+              <a href="#soil-test" className="btn btn-forest">
                 Book a soil test for your field
                 <IconArrow className="h-4 w-4" />
-              </Link>
+              </a>
               <p className="text-[14.5px] text-ink/60">
                 Not sure if your field needs a test?{" "}
                 <a

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { business } from "@/lib/data";
+import RouteLink from "@/components/RouteLink";
 import Reveal from "@/components/Reveal";
 import { IconArrow, IconCheck, IconHandshake, IconPhone, IconWhatsApp } from "@/components/icons";
 
@@ -89,10 +90,10 @@ export default function Partners() {
             <Reveal>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <span className="eyebrow text-lime">Partner network</span>
-                <a href="#partner-form" className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
+                <RouteLink href="/become-a-partner#partner-form" className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
                   Become our partner
                   <IconArrow className="h-4 w-4" />
-                </a>
+                </RouteLink>
               </div>
 
               <h2 className="mt-4 font-display text-[clamp(2rem,4.4vw,3.25rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-cream">

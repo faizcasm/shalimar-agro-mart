@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { business, nav, navSectionId } from "@/lib/data";
+import RouteLink from "@/components/RouteLink";
 import { IconClose, IconMail, IconMenu, IconPhone, IconPin } from "@/components/icons";
 
 export default function Header() {
@@ -15,20 +15,17 @@ export default function Header() {
   const [spyActive, setSpyActive] = useState<string>("/#home");
 
   // On dedicated pages the matching route item is highlighted; on the home
-  // page the section currently in view decides.
-  const active =
-    pathname !== "/"
-      ? nav.some((item) => item.href === pathname)
-        ? pathname
-        : ""
-      : spyActive;
+  // page the section currently in view decides. Route hrefs carry a hash
+  // (`/soil-testing#soil-test`), so compare against the path only.
+  const isActive = (href: string) =>
+    pathname === "/"
+      ? spyActive === href
+      : href.split("#")[0] === pathname;
 
-  // "Book a Soil Test" scrolls to the form on the pages that have it;
-  // everywhere else it opens the dedicated soil-testing page at the form.
-  const soilCtaHref =
-    pathname === "/" || pathname === "/soil-testing"
-      ? "#soil-test"
-      : "/soil-testing#soil-test";
+  // "Book a Soil Test" opens the dedicated soil-testing page and lands on
+  // the form; RouteLink turns it into a plain in-page anchor when we are
+  // already on that page.
+  const soilCtaHref = "/soil-testing#soil-test";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -135,7 +132,7 @@ export default function Header() {
               scrolled ? "h-16" : "h-20"
             }`}
           >
-            <Link
+            <RouteLink
               href="/#home"
               onClick={() => setOpen(false)}
               className="group flex items-center gap-3"
@@ -159,15 +156,15 @@ export default function Header() {
                   Agro Mart
                 </span>
               </span>
-            </Link>
+            </RouteLink>
 
             <nav className="hidden items-center gap-1 xl:flex">
               {nav.map((item) => (
-                <Link
+                <RouteLink
                   key={item.href}
                   href={item.href}
                   className={`relative rounded-full px-3.5 py-2 text-[14px] font-medium transition-colors duration-300 ${
-                    active === item.href
+                    isActive(item.href)
                       ? "text-lime"
                       : "text-cream/78 hover:text-cream"
                   }`}
@@ -175,19 +172,19 @@ export default function Header() {
                   {item.label}
                   <span
                     className={`absolute inset-x-3.5 -bottom-0.5 h-px bg-lime transition-transform duration-300 ${
-                      active === item.href ? "scale-x-100" : "scale-x-0"
+                      isActive(item.href) ? "scale-x-100" : "scale-x-0"
                     }`}
                   />
-                </Link>
+                </RouteLink>
               ))}
             </nav>
 
             <div className="flex items-center gap-2.5">
-              <Link href={soilCtaHref} className="hidden sm:block">
+              <RouteLink href={soilCtaHref} className="hidden sm:block">
                 <span className="btn btn-lime !px-5 !py-3 !text-[13.5px]">
                   Book a Soil Test
                 </span>
-              </Link>
+              </RouteLink>
 
               <button
                 type="button"
@@ -224,7 +221,7 @@ export default function Header() {
           <div className="mx-4 max-h-[78vh] overflow-y-auto rounded-3xl border border-white/12 bg-forest-deep p-5 shadow-2xl">
             <nav className="flex flex-col">
               {nav.map((item, i) => (
-                <Link
+                <RouteLink
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
@@ -235,7 +232,7 @@ export default function Header() {
                 >
                   {item.label}
                   <span className="text-xs text-lime/70">0{i + 1}</span>
-                </Link>
+                </RouteLink>
               ))}
             </nav>
 

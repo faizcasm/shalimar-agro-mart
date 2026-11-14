@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Stats from "@/components/Stats";
 import Partners from "@/components/Partners";
 import Contact from "@/components/Contact";
@@ -70,10 +69,10 @@ export default function BecomeAPartnerPage() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link href="#partner-form" className="btn btn-lime">
+            <a href="#partner-form" className="btn btn-lime">
               Apply as a partner
               <IconArrow className="h-4 w-4" />
-            </Link>
+            </a>
             <a href={business.phoneHref} className="btn btn-ghost">
               <IconPhone className="h-4 w-4" />
               Talk to the partnership desk
@@ -160,10 +159,10 @@ export default function BecomeAPartnerPage() {
 
           <Reveal delay={140}>
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <Link href="#partner-form" className="btn btn-forest">
+              <a href="#partner-form" className="btn btn-forest">
                 Fill the partner form
                 <IconArrow className="h-4 w-4" />
-              </Link>
+              </a>
               <p className="text-[14.5px] text-ink/60">
                 Prefer to talk first?{" "}
                 <a

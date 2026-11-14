@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { soilReasons } from "@/lib/data";
 import Reveal from "@/components/Reveal";
+import RouteLink from "@/components/RouteLink";
 import { IconArrow, IconCheck } from "@/components/icons";
 
 export default function WhySoilTesting() {
@@ -84,10 +85,10 @@ export default function WhySoilTesting() {
 
             <Reveal delay={140}>
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <a href="#soil-test" className="btn btn-forest">
+                <RouteLink href="/soil-testing#soil-test" className="btn btn-forest">
                   Test my soil
                   <IconArrow className="h-4 w-4" />
-                </a>
+                </RouteLink>
                 <p className="flex items-center gap-2 text-[14px] font-medium text-ink/60">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-lime text-forest">
                     <IconCheck className="h-3 w-3" />

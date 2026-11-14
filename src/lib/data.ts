@@ -55,22 +55,24 @@ export const stats = [
 ] as const;
 
 /* Hash items (`/#…`) scroll sections on the home page and navigate home from
-   any other route; path items open their own dedicated page. */
+   any other route; path items open their own dedicated page — and carry a
+   hash so the visitor lands straight on that page's form. */
 export const nav = [
   { label: "Home", href: "/#home" },
   { label: "About", href: "/#about" },
   { label: "Services", href: "/#services" },
-  { label: "Soil Testing", href: "/soil-testing" },
-  { label: "Become a Partner", href: "/become-a-partner" },
+  { label: "Soil Testing", href: "/soil-testing#soil-test" },
+  { label: "Become a Partner", href: "/become-a-partner#partner-form" },
   { label: "Stories", href: "/#stories" },
   { label: "Contact", href: "/#contact" },
 ] as const;
 
 /** Section on the home page that represents each nav destination. */
 export function navSectionId(href: string): string | null {
-  if (href === "/soil-testing") return "soil-test";
-  if (href === "/become-a-partner") return "partners";
   if (href.startsWith("/#")) return href.slice(2);
+  const path = href.split("#")[0];
+  if (path === "/soil-testing") return "soil-test";
+  if (path === "/become-a-partner") return "partners";
   return null;
 }
 
