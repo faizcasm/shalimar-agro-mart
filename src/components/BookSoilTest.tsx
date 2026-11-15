@@ -52,12 +52,14 @@ export default function BookSoilTest() {
   const [sent, setSent] = useState(false);
   const [plan, setPlan] = useState<SoilPlan | null>(null);
   const [scrollTick, setScrollTick] = useState(0);
-  // Crop drives the orchard-type field: vegetables aren't grown in orchards,
-  // so that select gets disabled (and skipped in validation) for them.
+  // Crop drives the orchard-type field: vegetables and field crops aren't
+  // grown in orchards, so that select gets disabled (and skipped in
+  // validation) for them.
   const [crop, setCrop] = useState("");
   const [orchard, setOrchard] = useState("");
 
-  const orchardDisabled = crop === "Vegetables";
+  const noOrchardCrops = ["Vegetables", "Field crops"];
+  const orchardDisabled = noOrchardCrops.includes(crop);
 
   const plansRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -100,7 +102,7 @@ export default function BookSoilTest() {
     const area = String(data.get("area") ?? "").trim();
     const notes = String(data.get("notes") ?? "").trim();
 
-    const orchardNeeded = crop !== "Vegetables";
+    const orchardNeeded = !noOrchardCrops.includes(crop);
     if (!name || !village || !district || !crop || !irrigation || (orchardNeeded && !orchard)) {
       setStatus("error");
       setMessage(
@@ -126,7 +128,9 @@ export default function BookSoilTest() {
       `District: ${district}`,
       `Phone: ${phone}`,
       `Crop: ${crop}`,
-      orchard ? `Orchard type: ${orchard}` : "Orchard type: N/A (vegetables)",
+      orchard
+        ? `Orchard type: ${orchard}`
+        : `Orchard type: N/A (${crop.toLowerCase()})`,
       `Irrigation: ${irrigation}`,
       treeAge ? `Tree age (years): ${treeAge}` : "",
       production ? `Last year production: ${production}` : "",
@@ -455,7 +459,7 @@ export default function BookSoilTest() {
                           onChange={(e) => {
                             const next = e.target.value;
                             setCrop(next);
-                            if (next === "Vegetables") setOrchard("");
+                            if (noOrchardCrops.includes(next)) setOrchard("");
                           }}
                         >
                           <option value="" disabled>
@@ -497,7 +501,7 @@ export default function BookSoilTest() {
                         >
                           <option value="" disabled>
                             {orchardDisabled
-                              ? "Not applicable for vegetables"
+                              ? "Not applicable for this crop"
                               : "Select orchard type"}
                           </option>
                           {orchardTypes.map((type) => (
