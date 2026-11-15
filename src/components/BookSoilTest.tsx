@@ -16,6 +16,7 @@ import {
   IconClock,
   IconFlask,
   IconLeaf,
+  IconMail,
   IconPhone,
   IconStar,
   IconWhatsApp,
@@ -50,6 +51,7 @@ export default function BookSoilTest() {
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
+  const [sentVia, setSentVia] = useState<"whatsapp" | "email" | null>(null);
   const [plan, setPlan] = useState<SoilPlan | null>(null);
   const [scrollTick, setScrollTick] = useState(0);
   // Crop drives the orchard-type field: vegetables and field crops aren't
@@ -63,6 +65,7 @@ export default function BookSoilTest() {
 
   const plansRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
+  const formElRef = useRef<HTMLFormElement | null>(null);
   // Guards against the effect re-firing when a cached route is re-shown —
   // only a *new* plan pick should scroll, never a return visit.
   const scrolledForTick = useRef(0);
@@ -83,12 +86,12 @@ export default function BookSoilTest() {
     plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
+  // Shared by both channels: validates and returns the message body,
+  // or null after surfacing the validation error.
+  function buildSubmission(): string[] | null {
+    const form = formElRef.current;
+    if (!form || !plan) return null;
     const data = new FormData(form);
-
-    if (!plan) return;
 
     const name = String(data.get("name") ?? "").trim();
     const village = String(data.get("village") ?? "").trim();
@@ -110,16 +113,16 @@ export default function BookSoilTest() {
           ? "Please fill in your name, village, district, crop, orchard type and irrigation type."
           : "Please fill in your name, village, district, crop and irrigation type.",
       );
-      return;
+      return null;
     }
 
     if (!/^[0-9]{10}$/.test(phone.replace(/\s+/g, ""))) {
       setStatus("error");
       setMessage("Enter a valid 10-digit mobile number.");
-      return;
+      return null;
     }
 
-    const lines = [
+    return [
       "soil test booking",
       `Plan: ${plan.name} — ₹${plan.price}`,
       `Parameters: ${plan.params.join(", ")}`,
@@ -137,17 +140,47 @@ export default function BookSoilTest() {
       area ? `Land area: ${area} kanal` : "",
       notes ? `Remarks: ${notes}` : "",
     ].filter(Boolean);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const lines = buildSubmission();
+    if (!lines) return;
 
     setStatus("ready");
     setMessage("Opening WhatsApp with your booking details…");
     setSent(true);
+    setSentVia("whatsapp");
 
     window.open(
       `${business.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`,
       "_blank",
       "noopener,noreferrer",
     );
-    form.reset();
+    resetForm();
+  }
+
+  // Secondary channel: same validation, same body, pre-filled mailto.
+  function handleEmail() {
+    const lines = buildSubmission();
+    if (!lines) return;
+
+    setStatus("ready");
+    setMessage(`Opening your email app — send the draft to ${business.email}.`);
+    setSent(true);
+    setSentVia("email");
+
+    const subject = `Soil test booking — ${plan?.name} plan`;
+    window.open(
+      `mailto:${business.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+    // Keep the values so the user can fall back to WhatsApp without retyping.
+  }
+
+  function resetForm() {
+    formElRef.current?.reset();
     // crop/orchard are controlled, so form.reset() alone won't clear them.
     setCrop("");
     setOrchard("");
@@ -391,7 +424,7 @@ export default function BookSoilTest() {
                     </span>
                   </div>
 
-                  <form onSubmit={handleSubmit} noValidate className="mt-7 grid gap-4">
+                  <form ref={formElRef} onSubmit={handleSubmit} noValidate className="mt-7 grid gap-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="field-label" htmlFor="st-name">
@@ -592,22 +625,53 @@ export default function BookSoilTest() {
                         className="flex items-start gap-2.5 rounded-xl border border-lime-deep/40 bg-lime/12 px-4 py-3 text-[14px] font-medium text-forest"
                       >
                         <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-lime-deep" />
-                        {message} If WhatsApp did not open, call us on{" "}
-                        <a href={business.phoneHref} className="font-bold underline">
-                          {business.phoneDisplay}
-                        </a>
-                        .
+                        {sentVia === "email" ? (
+                          <>
+                            {message} If no email app opened, write to{" "}
+                            <a
+                              href={business.emailHref}
+                              className="font-bold underline"
+                            >
+                              {business.email}
+                            </a>{" "}
+                            or use WhatsApp below.
+                          </>
+                        ) : (
+                          <>
+                            {message} If WhatsApp did not open, call us on{" "}
+                            <a href={business.phoneHref} className="font-bold underline">
+                              {business.phoneDisplay}
+                            </a>
+                            .
+                          </>
+                        )}
                       </p>
                     )}
 
                     <button type="submit" className="btn btn-lime mt-1 w-full !py-4">
+                      <IconWhatsApp className="h-4.5 w-4.5" />
                       Send booking on WhatsApp
                       <IconArrow className="h-4 w-4" />
                     </button>
 
+                    <div className="flex items-center gap-3 text-[12px] font-semibold uppercase tracking-wide text-ink/40">
+                      <span className="h-px flex-1 bg-ink/12" />
+                      or
+                      <span className="h-px flex-1 bg-ink/12" />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleEmail}
+                      className="btn btn-outline w-full !py-3.5"
+                    >
+                      <IconMail className="h-4.5 w-4.5" />
+                      Email the booking instead
+                    </button>
+
                     <p className="text-center text-[12.5px] leading-relaxed text-ink/50">
-                      By sending, you agree to be contacted about your soil test. We
-                      never share your number.
+                      WhatsApp gets the fastest reply — usually the same day.
+                      Email works too; we never share your number.
                     </p>
                   </form>
                 </div>

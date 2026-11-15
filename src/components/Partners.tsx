@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { business } from "@/lib/data";
 import RouteLink from "@/components/RouteLink";
 import Reveal from "@/components/Reveal";
-import { IconArrow, IconCheck, IconHandshake, IconPhone, IconWhatsApp } from "@/components/icons";
+import {
+  IconArrow,
+  IconCheck,
+  IconHandshake,
+  IconMail,
+  IconPhone,
+  IconWhatsApp,
+} from "@/components/icons";
 
 const businessTypes = [
   "Retail agri shop",
@@ -25,10 +32,14 @@ const partnerPerks = [
 export default function Partners() {
   const [status, setStatus] = useState<"idle" | "error" | "sent">("idle");
   const [message, setMessage] = useState("");
+  const [sentVia, setSentVia] = useState<"whatsapp" | "email" | null>(null);
+  const formElRef = useRef<HTMLFormElement | null>(null);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
+  // Shared by both channels: validates and returns the message body,
+  // or null after surfacing the validation error.
+  function buildSubmission(): string[] | null {
+    const form = formElRef.current;
+    if (!form) return null;
     const data = new FormData(form);
 
     const get = (key: string) => String(data.get(key) ?? "").trim();
@@ -44,16 +55,16 @@ export default function Partners() {
     if (!name || !firm || !village || !district || !type) {
       setStatus("error");
       setMessage("Please fill in all required fields marked with *.");
-      return;
+      return null;
     }
 
     if (!/^[0-9]{10}$/.test(phone.replace(/\s+/g, ""))) {
       setStatus("error");
       setMessage("Enter a valid 10-digit mobile number.");
-      return;
+      return null;
     }
 
-    const lines = [
+    return [
       "PARTNER REGISTRATION",
       `Name: ${name}`,
       `Firm / Business: ${firm}`,
@@ -63,16 +74,44 @@ export default function Partners() {
       `Phone: ${phone}`,
       note ? `Note: ${note}` : "",
     ].filter(Boolean);
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const lines = buildSubmission();
+    if (!lines) return;
 
     setStatus("sent");
     setMessage("Application received — opening WhatsApp to confirm…");
+    setSentVia("whatsapp");
 
     window.open(
       `${business.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`,
       "_blank",
       "noopener,noreferrer",
     );
-    form.reset();
+    formElRef.current?.reset();
+  }
+
+  // Secondary channel: same validation, same body, pre-filled mailto.
+  function handleEmail() {
+    const lines = buildSubmission();
+    if (!lines) return;
+
+    setStatus("sent");
+    setMessage(`Application ready — opening your email app to ${business.email}.`);
+    setSentVia("email");
+
+    const form = formElRef.current;
+    if (!form) return;
+    const firm = String(new FormData(form).get("pFirm") ?? "").trim();
+    const subject = `Partner registration${firm ? ` — ${firm}` : ""}`;
+    window.open(
+      `mailto:${business.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+    // Keep the values so the user can fall back to WhatsApp without retyping.
   }
 
   return (
@@ -174,7 +213,7 @@ export default function Partners() {
                 </span>
               </div>
 
-              <form onSubmit={handleSubmit} noValidate className="mt-7 grid gap-4">
+              <form ref={formElRef} onSubmit={handleSubmit} noValidate className="mt-7 grid gap-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="field-label" htmlFor="p-name">
@@ -273,21 +312,53 @@ export default function Partners() {
                     className="flex items-start gap-2.5 rounded-xl border border-lime-deep/40 bg-lime/12 px-4 py-3 text-[14px] font-medium text-forest"
                   >
                     <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-lime-deep" />
-                    {message} Prefer to talk? Call{" "}
-                    <a href={business.phoneHref} className="font-bold underline">
-                      {business.phoneDisplay}
-                    </a>
-                    .
+                    {sentVia === "email" ? (
+                      <>
+                        {message} If no email app opened, send it to{" "}
+                        <a
+                          href={business.emailHref}
+                          className="font-bold underline"
+                        >
+                          {business.email}
+                        </a>{" "}
+                        or submit on WhatsApp instead.
+                      </>
+                    ) : (
+                      <>
+                        {message} Prefer to talk? Call{" "}
+                        <a href={business.phoneHref} className="font-bold underline">
+                          {business.phoneDisplay}
+                        </a>
+                        .
+                      </>
+                    )}
                   </p>
                 )}
 
                 <button type="submit" className="btn btn-forest mt-1 w-full !py-4">
-                  Submit application
+                  <IconWhatsApp className="h-4.5 w-4.5" />
+                  Submit application on WhatsApp
                   <IconArrow className="h-4 w-4" />
                 </button>
 
+                <div className="flex items-center gap-3 text-[12px] font-semibold uppercase tracking-wide text-ink/40">
+                  <span className="h-px flex-1 bg-ink/12" />
+                  or
+                  <span className="h-px flex-1 bg-ink/12" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleEmail}
+                  className="btn btn-outline w-full !py-3.5"
+                >
+                  <IconMail className="h-4.5 w-4.5" />
+                  Email the application instead
+                </button>
+
                 <p className="text-center text-[12.5px] leading-relaxed text-ink/50">
-                  Your details are used only to contact you about partnering.
+                  WhatsApp gets the fastest reply — our team calls within 48
+                  hours. Email works too; your details stay private.
                 </p>
               </form>
             </div>
