@@ -147,7 +147,7 @@ export const services = [
 export const bookingSteps = [
   {
     title: "Tell us your field",
-    body: "Call or WhatsApp your village, district and the crop you grow.",
+    body: "Pick your plan, then send your village, district, crop and orchard details.",
   },
   {
     title: "We collect the sample",
@@ -161,6 +161,74 @@ export const bookingSteps = [
     title: "Report + plan",
     body: "You get a readable report and a fertilizer plan within 10 days.",
   },
+] as const;
+
+/* ---------- Soil testing plans ---------- */
+export type SoilPlan = {
+  id: "basic" | "standard" | "premium";
+  name: string;
+  price: number;
+  tagline: string;
+  params: string[];
+  popular?: boolean;
+};
+
+export const soilPlans: SoilPlan[] = [
+  {
+    id: "basic",
+    name: "Basic",
+    price: 800,
+    tagline: "The essentials for routine orchard checks.",
+    params: ["pH", "EC", "OC", "N", "P", "K"],
+  },
+  {
+    id: "standard",
+    name: "Standard",
+    price: 1500,
+    popular: true,
+    tagline: "Adds secondary nutrients for balanced fertilization.",
+    params: ["pH", "EC", "OC", "N", "P", "K", "Ca", "Mg", "S"],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: 2500,
+    tagline: "Full micronutrient panel with CEC and ESP.",
+    params: [
+      "pH",
+      "EC",
+      "OC",
+      "N",
+      "P",
+      "K",
+      "Ca",
+      "Mg",
+      "S",
+      "Na",
+      "Fe",
+      "Cu",
+      "Zn",
+      "B",
+      "Mn",
+      "CEC",
+      "ESP",
+    ],
+  },
+];
+
+/* ---------- Form dropdown options ---------- */
+export const orchardTypes = [
+  "Traditional",
+  "Medium High Density",
+  "High Density",
+  "Other",
+] as const;
+
+export const irrigationTypes = [
+  "Drip",
+  "Sprinkler",
+  "Flood",
+  "Rain-fed",
 ] as const;
 
 /* ---------- Grower / dealer pathways ---------- */
