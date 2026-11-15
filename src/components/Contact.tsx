@@ -182,7 +182,7 @@ export default function Contact() {
 
               <div className="relative h-[300px] w-full bg-cream-dark sm:h-[380px]">
                 <iframe
-                  title={`Map showing ${business.name} in ${business.mapQuery}`}
+                  title={`Map showing ${business.name} — ${business.addressLine}`}
                   src={mapSrc}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

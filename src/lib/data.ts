@@ -20,7 +20,7 @@ export const business = {
   addressLine: "Jammu & Kashmir, India",
   hours: "Mon – Sat · 9:00 AM – 7:00 PM",
   hoursNote: "Sunday & harvest season: open on request",
-  mapQuery: "Palhallan, Pattan, Jammu & Kashmir",
+  mapQuery: "34.181010,74.549874",
 } as const;
 
 export const stats = [
