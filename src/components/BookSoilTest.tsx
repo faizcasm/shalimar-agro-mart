@@ -121,7 +121,7 @@ export default function BookSoilTest() {
       `Irrigation: ${irrigation}`,
       treeAge ? `Tree age (years): ${treeAge}` : "",
       production ? `Last year production: ${production}` : "",
-      area ? `Land area: ${area} acre` : "",
+      area ? `Land area: ${area} kanal` : "",
       notes ? `Remarks: ${notes}` : "",
     ].filter(Boolean);
 
@@ -448,7 +448,7 @@ export default function BookSoilTest() {
                       </div>
                       <div>
                         <label className="field-label" htmlFor="st-area">
-                          Land area (acre)
+                          Land area (kanal)
                         </label>
                         <input
                           id="st-area"
