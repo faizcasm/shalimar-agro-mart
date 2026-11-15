@@ -52,6 +52,12 @@ export default function BookSoilTest() {
   const [sent, setSent] = useState(false);
   const [plan, setPlan] = useState<SoilPlan | null>(null);
   const [scrollTick, setScrollTick] = useState(0);
+  // Crop drives the orchard-type field: vegetables aren't grown in orchards,
+  // so that select gets disabled (and skipped in validation) for them.
+  const [crop, setCrop] = useState("");
+  const [orchard, setOrchard] = useState("");
+
+  const orchardDisabled = crop === "Vegetables";
 
   const plansRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -94,10 +100,13 @@ export default function BookSoilTest() {
     const area = String(data.get("area") ?? "").trim();
     const notes = String(data.get("notes") ?? "").trim();
 
-    if (!name || !village || !district || !crop || !orchard || !irrigation) {
+    const orchardNeeded = crop !== "Vegetables";
+    if (!name || !village || !district || !crop || !irrigation || (orchardNeeded && !orchard)) {
       setStatus("error");
       setMessage(
-        "Please fill in your name, village, district, crop, orchard type and irrigation type.",
+        orchardNeeded
+          ? "Please fill in your name, village, district, crop, orchard type and irrigation type."
+          : "Please fill in your name, village, district, crop and irrigation type.",
       );
       return;
     }
@@ -117,7 +126,7 @@ export default function BookSoilTest() {
       `District: ${district}`,
       `Phone: ${phone}`,
       `Crop: ${crop}`,
-      `Orchard type: ${orchard}`,
+      orchard ? `Orchard type: ${orchard}` : "Orchard type: N/A (vegetables)",
       `Irrigation: ${irrigation}`,
       treeAge ? `Tree age (years): ${treeAge}` : "",
       production ? `Last year production: ${production}` : "",
@@ -135,6 +144,9 @@ export default function BookSoilTest() {
       "noopener,noreferrer",
     );
     form.reset();
+    // crop/orchard are controlled, so form.reset() alone won't clear them.
+    setCrop("");
+    setOrchard("");
   }
 
   return (
@@ -435,7 +447,17 @@ export default function BookSoilTest() {
                         <label className="field-label" htmlFor="st-crop">
                           Crop *
                         </label>
-                        <select id="st-crop" name="crop" className="field" defaultValue="">
+                        <select
+                          id="st-crop"
+                          name="crop"
+                          className="field"
+                          value={crop}
+                          onChange={(e) => {
+                            const next = e.target.value;
+                            setCrop(next);
+                            if (next === "Vegetables") setOrchard("");
+                          }}
+                        >
                           <option value="" disabled>
                             Select your crop
                           </option>
@@ -463,16 +485,20 @@ export default function BookSoilTest() {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="field-label" htmlFor="st-orchard">
-                          Orchard type *
+                          Orchard type{orchardDisabled ? "" : " *"}
                         </label>
                         <select
                           id="st-orchard"
                           name="orchard"
                           className="field"
-                          defaultValue=""
+                          value={orchard}
+                          disabled={orchardDisabled}
+                          onChange={(e) => setOrchard(e.target.value)}
                         >
                           <option value="" disabled>
-                            Select orchard type
+                            {orchardDisabled
+                              ? "Not applicable for vegetables"
+                              : "Select orchard type"}
                           </option>
                           {orchardTypes.map((type) => (
                             <option key={type} value={type}>
@@ -480,6 +506,11 @@ export default function BookSoilTest() {
                             </option>
                           ))}
                         </select>
+                        {orchardDisabled && (
+                          <p className="mt-1.5 text-[12.5px] text-ink/50">
+                            Orchard type applies to fruit crops only.
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="field-label" htmlFor="st-irrigation">

@@ -256,6 +256,17 @@
     box-shadow: 0 0 0 4px rgba(186, 242, 0, 0.22);
   }
 
+  .field:disabled {
+    cursor: not-allowed;
+    background: rgba(4, 20, 10, 0.05);
+    color: rgba(4, 20, 10, 0.45);
+    opacity: 0.85;
+  }
+
+  .field:disabled option {
+    color: var(--color-ink);
+  }
+
   .field-label {
     display: block;
     font-size: 0.75rem;
