@@ -1,8 +1,10 @@
 /* ============================================================
-   Outbound notifications — WhatsApp Cloud API + SMTP email.
-   Everything degrades gracefully: if a channel isn't configured
-   yet, it reports "not_configured" instead of throwing, so the
-   API route can fall back to a deep-link for the client.
+   Outbound notifications — Telegram Bot API + SMTP email.
+   Every submission is delivered to BOTH channels (best-effort,
+   in parallel). Everything degrades gracefully: if a channel
+   isn't configured yet, it reports "not_configured" instead of
+   throwing, so the API route can fall back to a deep-link for
+   the client.
    ============================================================ */
 
 import nodemailer from "nodemailer";
@@ -15,80 +17,49 @@ export type DeliveryResult = {
   detail?: string;
 };
 
-/* ---------- WhatsApp Business Cloud API ---------- */
+/* ---------- Telegram Bot API ---------- */
 
 /**
- * Sends a message to the business WhatsApp number.
- * Set WHATSAPP_TEMPLATE_NAME to use an approved template (required by
- * Meta for business-initiated messages); otherwise a plain text message
- * is attempted, which works when messaging your own number.
+ * Sends a message to the business Telegram chat.
+ * Requires TELEGRAM_BOT_TOKEN (from @BotFather) and TELEGRAM_CHAT_ID
+ * (the chat the bot should notify). Plain text — no template approval
+ * needed, unlike WhatsApp.
  */
-export async function sendWhatsApp(message: string): Promise<DeliveryResult> {
-  const token = process.env.WHATSAPP_TOKEN;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const templateName = process.env.WHATSAPP_TEMPLATE_NAME;
-  const to = (process.env.WHATSAPP_TO || `91${business.phone}`).replace(/\D/g, "");
+export async function sendTelegram(message: string): Promise<DeliveryResult> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!token || !phoneNumberId) {
-    return { status: "not_configured", detail: "WhatsApp API credentials missing" };
+  if (!token || !chatId) {
+    return { status: "not_configured", detail: "Telegram bot credentials missing" };
   }
 
-  // Meta caps text bodies at 4096 chars; template params at 1024.
-  const bodyText = message.slice(0, 4000);
-
-  const payload = templateName
-    ? {
-        messaging_product: "whatsapp",
-        to,
-        type: "template",
-        template: {
-          name: templateName,
-          language: { code: process.env.WHATSAPP_TEMPLATE_LANG || "en" },
-          components: [
-            {
-              type: "body",
-              // Template placeholders {{1}}, {{2}}… get the message in chunks.
-              parameters: chunkText(bodyText, 900).map((text) => ({
-                type: "text",
-                text,
-              })),
-            },
-          ],
-        },
-      }
-    : {
-        messaging_product: "whatsapp",
-        to,
-        type: "text",
-        text: { body: bodyText },
-      };
+  // Telegram caps message bodies at 4096 chars.
+  const text = message.slice(0, 4000);
 
   try {
-    const res = await fetch(`https://graph.facebook.com/v21.0/${phoneNumberId}/messages`, {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
       signal: AbortSignal.timeout(15000),
     });
 
     const data = (await res.json().catch(() => ({}))) as {
-      messages?: { id?: string }[];
-      error?: { message?: string; code?: number };
+      ok?: boolean;
+      description?: string;
+      result?: { message_id?: number };
     };
 
-    if (!res.ok || data.error) {
+    if (!res.ok || data.ok === false) {
       return {
         status: "failed",
-        detail: data.error?.message || `WhatsApp API HTTP ${res.status}`,
+        detail: data.description || `Telegram HTTP ${res.status}`,
       };
     }
 
-    return { status: "sent", detail: data.messages?.[0]?.id };
+    return { status: "sent", detail: data.result?.message_id ? `msg ${data.result.message_id}` : undefined };
   } catch (err) {
-    return { status: "failed", detail: err instanceof Error ? err.message : "WhatsApp send failed" };
+    return { status: "failed", detail: err instanceof Error ? err.message : "Telegram send failed" };
   }
 }
 
@@ -126,12 +97,4 @@ export async function sendEmail(
   } catch (err) {
     return { status: "failed", detail: err instanceof Error ? err.message : "Email send failed" };
   }
-}
-
-/* ---------- helpers ---------- */
-
-function chunkText(text: string, size: number): string[] {
-  const chunks: string[] = [];
-  for (let i = 0; i < text.length; i += size) chunks.push(text.slice(i, i + size));
-  return chunks.length ? chunks : [""];
 }

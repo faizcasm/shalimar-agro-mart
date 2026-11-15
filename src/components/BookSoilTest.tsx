@@ -15,8 +15,6 @@ import {
   soilLines,
   soilSubject,
   validateSoil,
-  waUrl,
-  type Channel,
   type SoilFields,
 } from "@/lib/submission";
 import Reveal from "@/components/Reveal";
@@ -26,10 +24,9 @@ import {
   IconClock,
   IconFlask,
   IconLeaf,
-  IconMail,
   IconPhone,
   IconStar,
-  IconWhatsApp,
+  IconTelegram,
 } from "@/components/icons";
 
 const crops = [
@@ -61,7 +58,6 @@ export default function BookSoilTest() {
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
-  const [sentVia, setSentVia] = useState<"whatsapp" | "email" | null>(null);
   // True when the API couldn't deliver and we opened a manual deep-link.
   const [usedFallback, setUsedFallback] = useState(false);
   const [plan, setPlan] = useState<SoilPlan | null>(null);
@@ -131,28 +127,22 @@ export default function BookSoilTest() {
   }
 
   // POSTs to the backend, which stores the submission in MongoDB and
-  // delivers it (WhatsApp Cloud API / SMTP). If a channel isn't
-  // configured or fails, the API returns a deep-link we open instead.
-  async function sendToApi(
-    channel: Channel,
-    payload: { lines: string[]; fields: SoilFields },
-    subject: string,
-  ): Promise<void> {
+  // delivers it to BOTH Telegram and email. If neither channel is
+  // configured or fails, the API returns a mailto deep-link we open instead.
+  async function sendToApi(payload: { lines: string[]; fields: SoilFields }): Promise<void> {
     setStatus("sending");
-    setMessage(
-      channel === "whatsapp" ? "Sending on WhatsApp…" : "Sending email…",
-    );
+    setMessage("Sending on Telegram and email…");
 
     try {
       const res = await fetch("/api/registrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "soil-test", channel, planId: plan?.id, fields: payload.fields }),
+        body: JSON.stringify({ type: "soil-test", planId: plan?.id, fields: payload.fields }),
       });
       const data = (await res.json().catch(() => null)) as {
         ok?: boolean;
         error?: string;
-        delivery?: { status?: string; detail?: string };
+        delivered?: boolean;
         fallbackUrl?: string;
       } | null;
 
@@ -162,37 +152,24 @@ export default function BookSoilTest() {
         return;
       }
 
-      const delivered = data.delivery?.status === "sent";
-      setUsedFallback(!delivered);
-
-      if (delivered) {
+      if (data.delivered) {
         setStatus("ready");
         setSent(true);
-        setSentVia(channel);
-        setMessage(
-          channel === "whatsapp"
-            ? "Sent! Our team has your booking on WhatsApp and will reply shortly."
-            : `Sent! Your booking is with us — we'll reply to ${business.email}.`,
-        );
+        setUsedFallback(false);
+        setMessage("Sent! Your booking is on Telegram and email — we'll reply shortly.");
         resetForm();
         return;
       }
 
-      // Channel not configured / failed → open the deep-link so the
-      // user can still send manually.
+      // Neither channel configured / both failed → open the mailto
+      // deep-link so the user can still send manually.
       if (data.fallbackUrl) {
         setStatus("ready");
         setSent(true);
-        setSentVia(channel);
-        setMessage(
-          channel === "whatsapp"
-            ? "Opening WhatsApp with your booking details…"
-            : `Opening your email app — send the draft to ${business.email}.`,
-        );
+        setUsedFallback(true);
+        setMessage(`Opening your email app — send the draft to ${business.email}.`);
         window.open(data.fallbackUrl, "_blank", "noopener,noreferrer");
-        // WhatsApp handoff is complete (message is in the compose box) —
-        // reset. Email may silently fail to open, so keep the values.
-        if (channel === "whatsapp") resetForm();
+        // Email may silently fail to open, so keep the values.
         return;
       }
 
@@ -203,16 +180,9 @@ export default function BookSoilTest() {
       setUsedFallback(true);
       setStatus("ready");
       setSent(true);
-      setSentVia(channel);
-      setMessage(
-        channel === "whatsapp"
-          ? "Opening WhatsApp with your booking details…"
-          : `Opening your email app — send the draft to ${business.email}.`,
-      );
+      setMessage(`Opening your email app — send the draft to ${business.email}.`);
       window.open(
-        channel === "whatsapp"
-          ? waUrl(payload.lines)
-          : mailUrl(subject, payload.lines),
+        mailUrl(soilSubject(plan!), payload.lines),
         "_blank",
         "noopener,noreferrer",
       );
@@ -223,14 +193,7 @@ export default function BookSoilTest() {
     event.preventDefault();
     const payload = buildSubmission();
     if (!payload || !plan) return;
-    void sendToApi("whatsapp", payload, soilSubject(plan));
-  }
-
-  // Secondary channel: same validation, delivered by email instead.
-  function handleEmail() {
-    const payload = buildSubmission();
-    if (!payload || !plan) return;
-    void sendToApi("email", payload, soilSubject(plan));
+    void sendToApi(payload);
   }
 
   function resetForm() {
@@ -470,11 +433,11 @@ export default function BookSoilTest() {
                         Request a soil test
                       </h3>
                       <p className="mt-1.5 text-[14px] text-ink/60">
-                        We reply on WhatsApp, usually the same day.
+                        We reply on Telegram and email, usually the same day.
                       </p>
                     </div>
                     <span className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-forest text-lime sm:flex">
-                      <IconWhatsApp className="h-6 w-6" />
+                      <IconTelegram className="h-6 w-6" />
                     </span>
                   </div>
 
@@ -700,29 +663,23 @@ export default function BookSoilTest() {
                       >
                         <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-lime-deep" />
                         {message}
-                        {usedFallback &&
-                          (sentVia === "email" ? (
-                            <>
-                              {" "}
-                              If no email app opened, write to{" "}
-                              <a
-                                href={business.emailHref}
-                                className="font-bold underline"
-                              >
-                                {business.email}
-                              </a>
-                              .
-                            </>
-                          ) : (
-                            <>
-                              {" "}
-                              If WhatsApp did not open, call us on{" "}
-                              <a href={business.phoneHref} className="font-bold underline">
-                                {business.phoneDisplay}
-                              </a>
-                              .
-                            </>
-                          ))}
+                        {usedFallback && (
+                          <>
+                            {" "}
+                            If no email app opened, write to{" "}
+                            <a
+                              href={business.emailHref}
+                              className="font-bold underline"
+                            >
+                              {business.email}
+                            </a>{" "}
+                            or call{" "}
+                            <a href={business.phoneHref} className="font-bold underline">
+                              {business.phoneDisplay}
+                            </a>
+                            .
+                          </>
+                        )}
                       </p>
                     )}
 
@@ -731,30 +688,14 @@ export default function BookSoilTest() {
                       disabled={status === "sending"}
                       className="btn btn-lime mt-1 w-full !py-4 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <IconWhatsApp className="h-4.5 w-4.5" />
-                      {status === "sending" ? "Sending…" : "Send booking on WhatsApp"}
+                      <IconTelegram className="h-4.5 w-4.5" />
+                      {status === "sending" ? "Sending…" : "Send booking"}
                       <IconArrow className="h-4 w-4" />
                     </button>
 
-                    <div className="flex items-center gap-3 text-[12px] font-semibold uppercase tracking-wide text-ink/40">
-                      <span className="h-px flex-1 bg-ink/12" />
-                      or
-                      <span className="h-px flex-1 bg-ink/12" />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleEmail}
-                      disabled={status === "sending"}
-                      className="btn btn-outline w-full !py-3.5 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      <IconMail className="h-4.5 w-4.5" />
-                      Email the booking instead
-                    </button>
-
                     <p className="text-center text-[12.5px] leading-relaxed text-ink/50">
-                      WhatsApp gets the fastest reply — usually the same day.
-                      Email works too; we never share your number.
+                      Goes to our Telegram and email — usually a reply the same
+                      day. We never share your number.
                     </p>
                   </form>
                 </div>

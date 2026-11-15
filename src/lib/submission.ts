@@ -6,7 +6,6 @@
 
 import { business, soilPlans, type SoilPlan } from "@/lib/data";
 
-export type Channel = "whatsapp" | "email";
 export type SubmissionType = "soil-test" | "partner";
 
 /** Crops that aren't grown in orchards → orchard type not required. */
@@ -112,7 +111,7 @@ export function partnerLines(f: PartnerFields): string[] {
   ].filter(Boolean);
 }
 
-/* ---------- Fallback deep-links (used when the API can't deliver) ---------- */
+/* ---------- Fallback deep-link (used when the API can't deliver) ---------- */
 
 export function soilSubject(plan: SoilPlan): string {
   return `Soil test booking — ${plan.name} plan`;
@@ -121,10 +120,6 @@ export function soilSubject(plan: SoilPlan): string {
 export function partnerSubject(f: PartnerFields): string {
   const firm = clean(f.pFirm);
   return `Partner registration${firm ? ` — ${firm}` : ""}`;
-}
-
-export function waUrl(lines: string[]): string {
-  return `${business.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
 export function mailUrl(subject: string, lines: string[]): string {

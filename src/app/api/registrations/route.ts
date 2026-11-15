@@ -1,15 +1,15 @@
 /* ============================================================
    POST /api/registrations
    Stores a soil-test or partner submission in MongoDB and
-   delivers it via the chosen channel (WhatsApp Cloud API or
-   SMTP email) to the business. Always responds with a fallback
-   deep-link so the client can still deliver manually if a
-   channel isn't configured or fails.
+   delivers it to BOTH channels in parallel — a Telegram bot
+   message and an SMTP email. If neither channel is configured
+   or fails, responds with a mailto: deep-link so the client
+   can still deliver manually; the site never dead-ends.
    ============================================================ */
 
 import { NextRequest, NextResponse } from "next/server";
 import { isDbConfigured, getDb } from "@/lib/mongo";
-import { sendEmail, sendWhatsApp } from "@/lib/notify";
+import { sendEmail, sendTelegram } from "@/lib/notify";
 import {
   getPlan,
   mailUrl,
@@ -19,8 +19,6 @@ import {
   soilSubject,
   validatePartner,
   validateSoil,
-  waUrl,
-  type Channel,
   type PartnerFields,
   type SoilFields,
   type SubmissionType,
@@ -58,7 +56,6 @@ export async function POST(request: NextRequest) {
 
   let body: {
     type?: SubmissionType;
-    channel?: Channel;
     planId?: string;
     fields?: SoilFields & PartnerFields;
   };
@@ -73,16 +70,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unknown submission type." }, { status: 400 });
   }
 
-  const channel: Channel = body.channel === "email" ? "email" : "whatsapp";
   const fields = sanitize((body.fields ?? {}) as Record<string, unknown>) as SoilFields & PartnerFields;
 
   // Honeypot: bots fill the hidden field — pretend success, store nothing.
   if (fields.website) {
-    return NextResponse.json({
-      ok: true,
-      saved: false,
-      delivery: { channel, status: "sent" },
-    });
+    return NextResponse.json({ ok: true, saved: false, delivered: true });
   }
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -113,16 +105,17 @@ export async function POST(request: NextRequest) {
     subject = partnerSubject(fields);
   }
 
-  // 1) Persist (best-effort — a DB hiccup must not block delivery).
+  // 1) Persist FIRST (best-effort — a DB hiccup must not block delivery,
+  //    and a record survives even if the function is cut off mid-send).
   let saved = false;
   let id: string | undefined;
+  let insertedId: import("mongodb").ObjectId | undefined;
   let saveError: string | undefined;
   if (isDbConfigured()) {
     try {
       const db = await getDb();
       const result = await db!.collection("registrations").insertOne({
         type,
-        channel,
         planId: body.planId ?? null,
         fields,
         message: lines.join("\n"),
@@ -130,32 +123,48 @@ export async function POST(request: NextRequest) {
         createdAt: new Date(),
       });
       saved = true;
+      insertedId = result.insertedId;
       id = result.insertedId.toString();
     } catch (err) {
       saveError = err instanceof Error ? err.message : "Database save failed";
     }
   }
 
-  // 2) Deliver via the chosen channel (best-effort too).
+  // 2) Deliver to BOTH channels in parallel (each best-effort on its own).
   const message = lines.join("\n");
-  const delivery =
-    channel === "whatsapp" ? await sendWhatsApp(message) : await sendEmail(subject, message);
+  const [telegram, email] = await Promise.all([
+    sendTelegram(message),
+    sendEmail(subject, message),
+  ]);
+  const delivered = telegram.status === "sent" || email.status === "sent";
 
-  // 3) If delivery didn't go through, hand the client a deep-link so the
-  //    user can still send manually — the site never dead-ends.
-  const fallbackUrl =
-    delivery.status === "sent"
-      ? undefined
-      : channel === "whatsapp"
-        ? waUrl(lines)
-        : mailUrl(subject, lines);
+  // 3) Record which channels actually went out (best-effort).
+  if (saved && insertedId) {
+    try {
+      const db = await getDb();
+      await db!.collection("registrations").updateOne(
+        { _id: insertedId },
+        { $set: { notified: { telegram: telegram.status, email: email.status } } },
+      );
+    } catch {
+      // The record itself is already stored — notification status is a bonus.
+    }
+  }
+
+  // 4) If neither channel went through, hand the client a mailto deep-link
+  //    so the user can still send manually — the site never dead-ends.
+  const fallbackUrl = delivered ? undefined : mailUrl(subject, lines);
 
   return NextResponse.json({
     ok: true,
     saved,
     id,
     saveError,
-    delivery: { channel, status: delivery.status, detail: delivery.detail },
+    delivered,
+    delivery: {
+      telegram: { status: telegram.status, detail: telegram.detail },
+      email: { status: email.status, detail: email.detail },
+    },
     fallbackUrl,
   });
 }
