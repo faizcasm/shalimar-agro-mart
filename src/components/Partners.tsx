@@ -2,6 +2,15 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { business } from "@/lib/data";
+import {
+  mailUrl,
+  partnerLines,
+  partnerSubject,
+  validatePartner,
+  waUrl,
+  type Channel,
+  type PartnerFields,
+} from "@/lib/submission";
 import RouteLink from "@/components/RouteLink";
 import Reveal from "@/components/Reveal";
 import {
@@ -30,88 +39,139 @@ const partnerPerks = [
 ];
 
 export default function Partners() {
-  const [status, setStatus] = useState<"idle" | "error" | "sent">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "error" | "sent">("idle");
   const [message, setMessage] = useState("");
   const [sentVia, setSentVia] = useState<"whatsapp" | "email" | null>(null);
+  // True when the API couldn't deliver and we opened a manual deep-link.
+  const [usedFallback, setUsedFallback] = useState(false);
   const formElRef = useRef<HTMLFormElement | null>(null);
 
-  // Shared by both channels: validates and returns the message body,
+  // Shared by both channels: validates and returns the payload,
   // or null after surfacing the validation error.
-  function buildSubmission(): string[] | null {
+  function buildSubmission(): { lines: string[]; fields: PartnerFields } | null {
     const form = formElRef.current;
     if (!form) return null;
     const data = new FormData(form);
 
-    const get = (key: string) => String(data.get(key) ?? "").trim();
+    const fields: PartnerFields = {
+      pName: String(data.get("pName") ?? ""),
+      pFirm: String(data.get("pFirm") ?? ""),
+      pType: String(data.get("pType") ?? ""),
+      pVillage: String(data.get("pVillage") ?? ""),
+      pDistrict: String(data.get("pDistrict") ?? ""),
+      pPhone: String(data.get("pPhone") ?? ""),
+      pNote: String(data.get("pNote") ?? ""),
+      website: String(data.get("website") ?? ""),
+    };
 
-    const name = get("pName");
-    const firm = get("pFirm");
-    const village = get("pVillage");
-    const district = get("pDistrict");
-    const phone = get("pPhone");
-    const type = get("pType");
-    const note = get("pNote");
-
-    if (!name || !firm || !village || !district || !type) {
+    const error = validatePartner(fields);
+    if (error) {
       setStatus("error");
-      setMessage("Please fill in all required fields marked with *.");
+      setMessage(error);
       return null;
     }
 
-    if (!/^[0-9]{10}$/.test(phone.replace(/\s+/g, ""))) {
-      setStatus("error");
-      setMessage("Enter a valid 10-digit mobile number.");
-      return null;
-    }
+    return { lines: partnerLines(fields), fields };
+  }
 
-    return [
-      "PARTNER REGISTRATION",
-      `Name: ${name}`,
-      `Firm / Business: ${firm}`,
-      `Type: ${type}`,
-      `Village/Town: ${village}`,
-      `District: ${district}`,
-      `Phone: ${phone}`,
-      note ? `Note: ${note}` : "",
-    ].filter(Boolean);
+  // POSTs to the backend, which stores the submission in MongoDB and
+  // delivers it (WhatsApp Cloud API / SMTP). If a channel isn't
+  // configured or fails, the API returns a deep-link we open instead.
+  async function sendToApi(
+    channel: Channel,
+    payload: { lines: string[]; fields: PartnerFields },
+    subject: string,
+  ): Promise<void> {
+    setStatus("sending");
+    setMessage(
+      channel === "whatsapp" ? "Sending on WhatsApp…" : "Sending email…",
+    );
+
+    try {
+      const res = await fetch("/api/registrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "partner", channel, fields: payload.fields }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+        delivery?: { status?: string };
+        fallbackUrl?: string;
+      } | null;
+
+      if (!res.ok || !data?.ok) {
+        setStatus("error");
+        setMessage(data?.error || "Something went wrong. Please try again or call us.");
+        return;
+      }
+
+      const delivered = data.delivery?.status === "sent";
+      setUsedFallback(!delivered);
+
+      if (delivered) {
+        setStatus("sent");
+        setSentVia(channel);
+        setMessage(
+          channel === "whatsapp"
+            ? "Application received — our team will call you within 48 hours."
+            : `Application received — we'll reply to ${business.email}.`,
+        );
+        formElRef.current?.reset();
+        return;
+      }
+
+      // Channel not configured / failed → open the deep-link so the
+      // user can still send manually.
+      if (data.fallbackUrl) {
+        setStatus("sent");
+        setSentVia(channel);
+        setMessage(
+          channel === "whatsapp"
+            ? "Opening WhatsApp to confirm your application…"
+            : `Opening your email app — send the draft to ${business.email}.`,
+        );
+        window.open(data.fallbackUrl, "_blank", "noopener,noreferrer");
+        // WhatsApp handoff is complete (message is in the compose box) —
+        // reset. Email may silently fail to open, so keep the values.
+        if (channel === "whatsapp") formElRef.current?.reset();
+        return;
+      }
+
+      setStatus("error");
+      setMessage("Could not deliver right now. Please call us or try again.");
+    } catch {
+      // Network failure → fall back to the deep-link.
+      setUsedFallback(true);
+      setStatus("sent");
+      setSentVia(channel);
+      setMessage(
+        channel === "whatsapp"
+          ? "Opening WhatsApp to confirm your application…"
+          : `Opening your email app — send the draft to ${business.email}.`,
+      );
+      window.open(
+        channel === "whatsapp"
+          ? waUrl(payload.lines)
+          : mailUrl(subject, payload.lines),
+        "_blank",
+        "noopener,noreferrer",
+      );
+    }
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const lines = buildSubmission();
-    if (!lines) return;
-
-    setStatus("sent");
-    setMessage("Application received — opening WhatsApp to confirm…");
-    setSentVia("whatsapp");
-
-    window.open(
-      `${business.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
-    formElRef.current?.reset();
+    const payload = buildSubmission();
+    if (!payload) return;
+    void sendToApi("whatsapp", payload, partnerSubject(payload.fields));
   }
 
-  // Secondary channel: same validation, same body, pre-filled mailto.
+  // Secondary channel: same validation, delivered by email instead.
   function handleEmail() {
-    const lines = buildSubmission();
-    if (!lines) return;
-
-    setStatus("sent");
-    setMessage(`Application ready — opening your email app to ${business.email}.`);
-    setSentVia("email");
-
-    const form = formElRef.current;
-    if (!form) return;
-    const firm = String(new FormData(form).get("pFirm") ?? "").trim();
-    const subject = `Partner registration${firm ? ` — ${firm}` : ""}`;
-    window.open(
-      `mailto:${business.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
-    // Keep the values so the user can fall back to WhatsApp without retyping.
+    const payload = buildSubmission();
+    if (!payload) return;
+    void sendToApi("email", payload, partnerSubject(payload.fields));
   }
 
   return (
@@ -297,6 +357,26 @@ export default function Partners() {
                   />
                 </div>
 
+                {/* Honeypot — hidden from humans, bots fill it */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  className="absolute left-[-9999px] h-px w-px opacity-0"
+                />
+
+                {status === "sending" && (
+                  <p
+                    role="status"
+                    className="flex items-center gap-2.5 rounded-xl border border-forest/15 bg-cream px-4 py-3 text-[14px] font-medium text-forest"
+                  >
+                    <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-forest/25 border-t-lime-deep" />
+                    {message}
+                  </p>
+                )}
+
                 {status === "error" && (
                   <p
                     role="alert"
@@ -312,32 +392,40 @@ export default function Partners() {
                     className="flex items-start gap-2.5 rounded-xl border border-lime-deep/40 bg-lime/12 px-4 py-3 text-[14px] font-medium text-forest"
                   >
                     <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-lime-deep" />
-                    {sentVia === "email" ? (
-                      <>
-                        {message} If no email app opened, send it to{" "}
-                        <a
-                          href={business.emailHref}
-                          className="font-bold underline"
-                        >
-                          {business.email}
-                        </a>{" "}
-                        or submit on WhatsApp instead.
-                      </>
-                    ) : (
-                      <>
-                        {message} Prefer to talk? Call{" "}
-                        <a href={business.phoneHref} className="font-bold underline">
-                          {business.phoneDisplay}
-                        </a>
-                        .
-                      </>
-                    )}
+                    {message}
+                    {usedFallback &&
+                      (sentVia === "email" ? (
+                        <>
+                          {" "}
+                          If no email app opened, send it to{" "}
+                          <a
+                            href={business.emailHref}
+                            className="font-bold underline"
+                          >
+                            {business.email}
+                          </a>
+                          .
+                        </>
+                      ) : (
+                        <>
+                          {" "}
+                          Prefer to talk? Call{" "}
+                          <a href={business.phoneHref} className="font-bold underline">
+                            {business.phoneDisplay}
+                          </a>
+                          .
+                        </>
+                      ))}
                   </p>
                 )}
 
-                <button type="submit" className="btn btn-forest mt-1 w-full !py-4">
+                <button
+                  type="submit"
+                  disabled={status === "sending"}
+                  className="btn btn-forest mt-1 w-full !py-4 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   <IconWhatsApp className="h-4.5 w-4.5" />
-                  Submit application on WhatsApp
+                  {status === "sending" ? "Sending…" : "Submit application on WhatsApp"}
                   <IconArrow className="h-4 w-4" />
                 </button>
 
@@ -350,7 +438,8 @@ export default function Partners() {
                 <button
                   type="button"
                   onClick={handleEmail}
-                  className="btn btn-outline w-full !py-3.5"
+                  disabled={status === "sending"}
+                  className="btn btn-outline w-full !py-3.5 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <IconMail className="h-4.5 w-4.5" />
                   Email the application instead

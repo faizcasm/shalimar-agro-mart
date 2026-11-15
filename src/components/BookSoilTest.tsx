@@ -9,6 +9,16 @@ import {
   soilPlans,
   type SoilPlan,
 } from "@/lib/data";
+import {
+  NO_ORCHARD_CROPS,
+  mailUrl,
+  soilLines,
+  soilSubject,
+  validateSoil,
+  waUrl,
+  type Channel,
+  type SoilFields,
+} from "@/lib/submission";
 import Reveal from "@/components/Reveal";
 import {
   IconArrow,
@@ -33,7 +43,7 @@ const crops = [
   "Other",
 ];
 
-type Status = "idle" | "error" | "ready";
+type Status = "idle" | "sending" | "error" | "ready";
 
 const tierIcon = {
   basic: IconLeaf,
@@ -52,6 +62,8 @@ export default function BookSoilTest() {
   const [message, setMessage] = useState("");
   const [sent, setSent] = useState(false);
   const [sentVia, setSentVia] = useState<"whatsapp" | "email" | null>(null);
+  // True when the API couldn't deliver and we opened a manual deep-link.
+  const [usedFallback, setUsedFallback] = useState(false);
   const [plan, setPlan] = useState<SoilPlan | null>(null);
   const [scrollTick, setScrollTick] = useState(0);
   // Crop drives the orchard-type field: vegetables and field crops aren't
@@ -60,7 +72,7 @@ export default function BookSoilTest() {
   const [crop, setCrop] = useState("");
   const [orchard, setOrchard] = useState("");
 
-  const noOrchardCrops = ["Vegetables", "Field crops"];
+  const noOrchardCrops = NO_ORCHARD_CROPS as readonly string[];
   const orchardDisabled = noOrchardCrops.includes(crop);
 
   const plansRef = useRef<HTMLDivElement | null>(null);
@@ -86,97 +98,139 @@ export default function BookSoilTest() {
     plansRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  // Shared by both channels: validates and returns the message body,
+  // Shared by both channels: validates and returns the payload,
   // or null after surfacing the validation error.
-  function buildSubmission(): string[] | null {
+  function buildSubmission(): { lines: string[]; fields: SoilFields } | null {
     const form = formElRef.current;
     if (!form || !plan) return null;
     const data = new FormData(form);
 
-    const name = String(data.get("name") ?? "").trim();
-    const village = String(data.get("village") ?? "").trim();
-    const district = String(data.get("district") ?? "").trim();
-    const phone = String(data.get("phone") ?? "").trim();
-    const crop = String(data.get("crop") ?? "").trim();
-    const orchard = String(data.get("orchard") ?? "").trim();
-    const irrigation = String(data.get("irrigation") ?? "").trim();
-    const treeAge = String(data.get("treeAge") ?? "").trim();
-    const production = String(data.get("production") ?? "").trim();
-    const area = String(data.get("area") ?? "").trim();
-    const notes = String(data.get("notes") ?? "").trim();
+    const fields: SoilFields = {
+      name: String(data.get("name") ?? ""),
+      village: String(data.get("village") ?? ""),
+      district: String(data.get("district") ?? ""),
+      phone: String(data.get("phone") ?? ""),
+      crop: String(data.get("crop") ?? ""),
+      orchard: String(data.get("orchard") ?? ""),
+      irrigation: String(data.get("irrigation") ?? ""),
+      treeAge: String(data.get("treeAge") ?? ""),
+      production: String(data.get("production") ?? ""),
+      area: String(data.get("area") ?? ""),
+      notes: String(data.get("notes") ?? ""),
+      website: String(data.get("website") ?? ""),
+    };
 
-    const orchardNeeded = !noOrchardCrops.includes(crop);
-    if (!name || !village || !district || !crop || !irrigation || (orchardNeeded && !orchard)) {
+    const error = validateSoil(fields);
+    if (error) {
       setStatus("error");
+      setMessage(error);
+      return null;
+    }
+
+    return { lines: soilLines(fields, plan), fields };
+  }
+
+  // POSTs to the backend, which stores the submission in MongoDB and
+  // delivers it (WhatsApp Cloud API / SMTP). If a channel isn't
+  // configured or fails, the API returns a deep-link we open instead.
+  async function sendToApi(
+    channel: Channel,
+    payload: { lines: string[]; fields: SoilFields },
+    subject: string,
+  ): Promise<void> {
+    setStatus("sending");
+    setMessage(
+      channel === "whatsapp" ? "Sending on WhatsApp…" : "Sending email…",
+    );
+
+    try {
+      const res = await fetch("/api/registrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "soil-test", channel, planId: plan?.id, fields: payload.fields }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+        delivery?: { status?: string; detail?: string };
+        fallbackUrl?: string;
+      } | null;
+
+      if (!res.ok || !data?.ok) {
+        setStatus("error");
+        setMessage(data?.error || "Something went wrong. Please try again or call us.");
+        return;
+      }
+
+      const delivered = data.delivery?.status === "sent";
+      setUsedFallback(!delivered);
+
+      if (delivered) {
+        setStatus("ready");
+        setSent(true);
+        setSentVia(channel);
+        setMessage(
+          channel === "whatsapp"
+            ? "Sent! Our team has your booking on WhatsApp and will reply shortly."
+            : `Sent! Your booking is with us — we'll reply to ${business.email}.`,
+        );
+        resetForm();
+        return;
+      }
+
+      // Channel not configured / failed → open the deep-link so the
+      // user can still send manually.
+      if (data.fallbackUrl) {
+        setStatus("ready");
+        setSent(true);
+        setSentVia(channel);
+        setMessage(
+          channel === "whatsapp"
+            ? "Opening WhatsApp with your booking details…"
+            : `Opening your email app — send the draft to ${business.email}.`,
+        );
+        window.open(data.fallbackUrl, "_blank", "noopener,noreferrer");
+        // WhatsApp handoff is complete (message is in the compose box) —
+        // reset. Email may silently fail to open, so keep the values.
+        if (channel === "whatsapp") resetForm();
+        return;
+      }
+
+      setStatus("error");
+      setMessage("Could not deliver right now. Please call us or try again.");
+    } catch {
+      // Network failure → fall back to the deep-link.
+      setUsedFallback(true);
+      setStatus("ready");
+      setSent(true);
+      setSentVia(channel);
       setMessage(
-        orchardNeeded
-          ? "Please fill in your name, village, district, crop, orchard type and irrigation type."
-          : "Please fill in your name, village, district, crop and irrigation type.",
+        channel === "whatsapp"
+          ? "Opening WhatsApp with your booking details…"
+          : `Opening your email app — send the draft to ${business.email}.`,
       );
-      return null;
+      window.open(
+        channel === "whatsapp"
+          ? waUrl(payload.lines)
+          : mailUrl(subject, payload.lines),
+        "_blank",
+        "noopener,noreferrer",
+      );
     }
-
-    if (!/^[0-9]{10}$/.test(phone.replace(/\s+/g, ""))) {
-      setStatus("error");
-      setMessage("Enter a valid 10-digit mobile number.");
-      return null;
-    }
-
-    return [
-      "soil test booking",
-      `Plan: ${plan.name} — ₹${plan.price}`,
-      `Parameters: ${plan.params.join(", ")}`,
-      `Name: ${name}`,
-      `Village/Town: ${village}`,
-      `District: ${district}`,
-      `Phone: ${phone}`,
-      `Crop: ${crop}`,
-      orchard
-        ? `Orchard type: ${orchard}`
-        : `Orchard type: N/A (${crop.toLowerCase()})`,
-      `Irrigation: ${irrigation}`,
-      treeAge ? `Tree age (years): ${treeAge}` : "",
-      production ? `Last year production: ${production}` : "",
-      area ? `Land area: ${area} kanal` : "",
-      notes ? `Remarks: ${notes}` : "",
-    ].filter(Boolean);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const lines = buildSubmission();
-    if (!lines) return;
-
-    setStatus("ready");
-    setMessage("Opening WhatsApp with your booking details…");
-    setSent(true);
-    setSentVia("whatsapp");
-
-    window.open(
-      `${business.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
-    resetForm();
+    const payload = buildSubmission();
+    if (!payload || !plan) return;
+    void sendToApi("whatsapp", payload, soilSubject(plan));
   }
 
-  // Secondary channel: same validation, same body, pre-filled mailto.
+  // Secondary channel: same validation, delivered by email instead.
   function handleEmail() {
-    const lines = buildSubmission();
-    if (!lines) return;
-
-    setStatus("ready");
-    setMessage(`Opening your email app — send the draft to ${business.email}.`);
-    setSent(true);
-    setSentVia("email");
-
-    const subject = `Soil test booking — ${plan?.name} plan`;
-    window.open(
-      `mailto:${business.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
-    // Keep the values so the user can fall back to WhatsApp without retyping.
+    const payload = buildSubmission();
+    if (!payload || !plan) return;
+    void sendToApi("email", payload, soilSubject(plan));
   }
 
   function resetForm() {
@@ -610,6 +664,26 @@ export default function BookSoilTest() {
                       />
                     </div>
 
+                    {/* Honeypot — hidden from humans, bots fill it */}
+                    <input
+                      type="text"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      aria-hidden="true"
+                      className="absolute left-[-9999px] h-px w-px opacity-0"
+                    />
+
+                    {status === "sending" && (
+                      <p
+                        role="status"
+                        className="flex items-center gap-2.5 rounded-xl border border-forest/15 bg-cream px-4 py-3 text-[14px] font-medium text-forest"
+                      >
+                        <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-forest/25 border-t-lime-deep" />
+                        {message}
+                      </p>
+                    )}
+
                     {status === "error" && (
                       <p
                         role="alert"
@@ -619,38 +693,46 @@ export default function BookSoilTest() {
                       </p>
                     )}
 
-                    {sent && status !== "error" && (
+                    {sent && status !== "error" && status !== "sending" && (
                       <p
                         role="status"
                         className="flex items-start gap-2.5 rounded-xl border border-lime-deep/40 bg-lime/12 px-4 py-3 text-[14px] font-medium text-forest"
                       >
                         <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-lime-deep" />
-                        {sentVia === "email" ? (
-                          <>
-                            {message} If no email app opened, write to{" "}
-                            <a
-                              href={business.emailHref}
-                              className="font-bold underline"
-                            >
-                              {business.email}
-                            </a>{" "}
-                            or use WhatsApp below.
-                          </>
-                        ) : (
-                          <>
-                            {message} If WhatsApp did not open, call us on{" "}
-                            <a href={business.phoneHref} className="font-bold underline">
-                              {business.phoneDisplay}
-                            </a>
-                            .
-                          </>
-                        )}
+                        {message}
+                        {usedFallback &&
+                          (sentVia === "email" ? (
+                            <>
+                              {" "}
+                              If no email app opened, write to{" "}
+                              <a
+                                href={business.emailHref}
+                                className="font-bold underline"
+                              >
+                                {business.email}
+                              </a>
+                              .
+                            </>
+                          ) : (
+                            <>
+                              {" "}
+                              If WhatsApp did not open, call us on{" "}
+                              <a href={business.phoneHref} className="font-bold underline">
+                                {business.phoneDisplay}
+                              </a>
+                              .
+                            </>
+                          ))}
                       </p>
                     )}
 
-                    <button type="submit" className="btn btn-lime mt-1 w-full !py-4">
+                    <button
+                      type="submit"
+                      disabled={status === "sending"}
+                      className="btn btn-lime mt-1 w-full !py-4 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
                       <IconWhatsApp className="h-4.5 w-4.5" />
-                      Send booking on WhatsApp
+                      {status === "sending" ? "Sending…" : "Send booking on WhatsApp"}
                       <IconArrow className="h-4 w-4" />
                     </button>
 
@@ -663,7 +745,8 @@ export default function BookSoilTest() {
                     <button
                       type="button"
                       onClick={handleEmail}
-                      className="btn btn-outline w-full !py-3.5"
+                      disabled={status === "sending"}
+                      className="btn btn-outline w-full !py-3.5 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <IconMail className="h-4.5 w-4.5" />
                       Email the booking instead
