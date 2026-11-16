@@ -23,11 +23,15 @@ const siteTitle = `${business.name} — Soil Testing & Orchard Solutions in Jamm
 const siteDescription =
   "Shalimar Agro Mart provides soil testing, orchard nutrition advisory and genuine crop inputs to growers across Jammu & Kashmir. 1000+ soil tests, 50+ partners. Call 9070999299.";
 
+// Absolute site origin — set NEXT_PUBLIC_SITE_URL in production so
+// canonicals, the sitemap and social cards resolve to the real domain
+// instead of localhost (which would block indexing).
+const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+).replace(/\/$/, "");
+
 export const metadata: Metadata = {
-  // Set NEXT_PUBLIC_SITE_URL when deploying so social cards resolve correctly.
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  ),
+  metadataBase: new URL(siteUrl),
   title: {
     default: siteTitle,
     template: `%s | ${business.name}`,
@@ -47,6 +51,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: business.name }],
   creator: business.name,
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_IN",
@@ -83,6 +88,7 @@ const localBusinessJsonld = {
   "@type": ["LocalBusiness", "Store"],
   name: business.name,
   description: siteDescription,
+  url: siteUrl,
   slogan: business.tagline,
   telephone: `+91${business.phone}`,
   email: business.email,
