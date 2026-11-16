@@ -185,7 +185,6 @@ export const soilPlans: SoilPlan[] = [
     id: "standard",
     name: "Standard",
     price: 1500,
-    popular: true,
     tagline: "Adds secondary nutrients for balanced fertilization.",
     params: ["pH", "EC", "OC", "N", "P", "K", "Ca", "Mg", "S"],
   },
@@ -193,6 +192,7 @@ export const soilPlans: SoilPlan[] = [
     id: "premium",
     name: "Premium",
     price: 2500,
+    popular: true,
     tagline: "Full micronutrient panel with CEC and ESP.",
     params: [
       "pH",

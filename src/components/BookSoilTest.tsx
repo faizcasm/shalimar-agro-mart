@@ -49,9 +49,9 @@ const tierIcon = {
 } as const;
 
 const tierHeader = {
-  basic: "bg-forest text-cream",
-  standard: "bg-lime text-forest-deep",
-  premium: "bg-apple text-white",
+  basic: "bg-gradient-to-r from-forest to-forest-mid text-cream",
+  standard: "bg-gradient-to-r from-lime to-lime-deep text-forest-deep",
+  premium: "bg-gradient-to-r from-forest-deep via-forest to-forest-mid text-lime",
 } as const;
 
 export default function BookSoilTest() {
@@ -244,7 +244,9 @@ export default function BookSoilTest() {
                   className={`group flex h-full w-full flex-col overflow-hidden rounded-[1.5rem] border-2 bg-paper text-left transition-all duration-300 ${
                     isSelected
                       ? "-translate-y-1 border-forest shadow-[0_30px_60px_-45px_rgba(8,50,4,0.75)] ring-2 ring-forest/25"
-                      : "border-forest/10 hover:-translate-y-1 hover:border-forest/35 hover:shadow-[0_24px_50px_-40px_rgba(8,50,4,0.6)]"
+                      : p.popular
+                        ? "border-lime-deep/70 bg-gradient-to-b from-lime/12 to-paper shadow-[0_28px_55px_-40px_rgba(138,176,41,0.6)] hover:-translate-y-1 hover:border-lime-deep hover:shadow-[0_34px_60px_-40px_rgba(138,176,41,0.75)]"
+                        : "border-forest/10 hover:-translate-y-1 hover:border-forest/35 hover:shadow-[0_24px_50px_-40px_rgba(8,50,4,0.6)]"
                   }`}
                 >
                   <span
@@ -260,15 +262,15 @@ export default function BookSoilTest() {
                         Selected
                       </span>
                     ) : p.popular ? (
-                      <span className="rounded-full bg-forest px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-lime">
+                      <span className="rounded-full bg-lime px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-forest-deep shadow-[0_2px_10px_-2px_rgba(186,242,0,0.7)]">
                         Most popular
                       </span>
                     ) : null}
                   </span>
 
                   <span className="flex flex-1 flex-col p-5 sm:p-6">
-                    <span className="flex items-baseline gap-1.5">
-                      <span className="font-display text-[2.35rem] font-bold leading-none text-forest">
+                    <span className="flex items-baseline gap-2">
+                      <span className="rounded-xl bg-lime/25 px-2.5 py-1 font-display text-[2.35rem] font-bold leading-none text-forest">
                         ₹{p.price}
                       </span>
                       <span className="text-[13px] font-semibold text-ink/45">
@@ -295,7 +297,9 @@ export default function BookSoilTest() {
                         className={`inline-flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13.5px] font-semibold transition-colors ${
                           isSelected
                             ? "bg-forest text-lime"
-                            : "bg-forest/8 text-forest group-hover:bg-forest group-hover:text-lime"
+                            : p.popular
+                              ? "bg-lime text-forest-deep group-hover:bg-lime-soft"
+                              : "bg-forest/8 text-forest group-hover:bg-forest group-hover:text-lime"
                         }`}
                       >
                         {isSelected ? (
@@ -609,7 +613,7 @@ export default function BookSoilTest() {
                           id="st-production"
                           name="production"
                           className="field"
-                          placeholder="e.g. 45 quintals"
+                          placeholder="e.g. 45 kgs"
                         />
                       </div>
                     </div>
