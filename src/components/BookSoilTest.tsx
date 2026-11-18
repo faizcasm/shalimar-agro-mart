@@ -106,6 +106,7 @@ export default function BookSoilTest() {
       village: String(data.get("village") ?? ""),
       district: String(data.get("district") ?? ""),
       phone: String(data.get("phone") ?? ""),
+      orchardName: String(data.get("orchardName") ?? ""),
       crop: String(data.get("crop") ?? ""),
       orchard: String(data.get("orchard") ?? ""),
       irrigation: String(data.get("irrigation") ?? ""),
@@ -473,6 +474,18 @@ export default function BookSoilTest() {
                           autoComplete="tel"
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="field-label" htmlFor="st-orchard-name">
+                        Orchard name
+                      </label>
+                      <input
+                        id="st-orchard-name"
+                        name="orchardName"
+                        className="field"
+                        placeholder="e.g. Gulzar Orchard"
+                      />
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">

@@ -14,6 +14,7 @@ export const NO_ORCHARD_CROPS = ["Vegetables", "Field crops"] as const;
 export type SoilFields = {
   name?: string;
   phone?: string;
+  orchardName?: string;
   village?: string;
   district?: string;
   crop?: string;
@@ -88,6 +89,7 @@ export function soilLines(f: SoilFields, plan: SoilPlan): string[] {
     `Village/Town: ${clean(f.village)}`,
     `District: ${clean(f.district)}`,
     `Phone: ${clean(f.phone)}`,
+    clean(f.orchardName) ? `Orchard name: ${clean(f.orchardName)}` : "",
     `Crop: ${crop}`,
     orchard ? `Orchard type: ${orchard}` : `Orchard type: N/A (${crop.toLowerCase()})`,
     `Irrigation: ${clean(f.irrigation)}`,
