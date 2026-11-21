@@ -293,6 +293,12 @@ export default function BookSoilTest() {
                       ))}
                     </span>
 
+                    {p.id === "premium" ? (
+                      <span className="mt-5 block text-center text-[13px] font-semibold leading-snug text-forest-deep">
+                        Detailed recommendation from soil scientist
+                      </span>
+                    ) : null}
+
                     <span className="mt-auto block pt-5">
                       <span
                         className={`inline-flex w-full items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13.5px] font-semibold transition-colors ${
