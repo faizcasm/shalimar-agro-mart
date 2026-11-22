@@ -49,6 +49,9 @@ function sanitize(fields: Record<string, unknown>): Record<string, string> {
 }
 
 export async function POST(request: NextRequest) {
+  // Wall-clock start so we can report how long the whole
+  // save + deliver round-trip took (diagnosing slow notifications).
+  const startedAt = Date.now();
   const length = Number(request.headers.get("content-length") || 0);
   if (length > 50_000) {
     return NextResponse.json({ ok: false, error: "Payload too large." }, { status: 413 });
@@ -137,14 +140,21 @@ export async function POST(request: NextRequest) {
     sendEmail(subject, message),
   ]);
   const delivered = telegram.status === "sent" || email.status === "sent";
+  const deliveryMs = Date.now() - startedAt;
 
-  // 3) Record which channels actually went out (best-effort).
+  // 3) Record which channels actually went out, and exactly when (best-effort).
   if (saved && insertedId) {
     try {
       const db = await getDb();
       await db!.collection("registrations").updateOne(
         { _id: insertedId },
-        { $set: { notified: { telegram: telegram.status, email: email.status } } },
+        {
+          $set: {
+            notified: { telegram: telegram.status, email: email.status },
+            notifiedAt: new Date(),
+            deliveryMs,
+          },
+        },
       );
     } catch {
       // The record itself is already stored — notification status is a bonus.
@@ -165,6 +175,7 @@ export async function POST(request: NextRequest) {
       telegram: { status: telegram.status, detail: telegram.detail },
       email: { status: email.status, detail: email.detail },
     },
+    deliveryMs,
     fallbackUrl,
   });
 }

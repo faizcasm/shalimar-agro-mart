@@ -294,8 +294,9 @@ export default function BookSoilTest() {
                     </span>
 
                     {p.id === "premium" ? (
-                      <span className="mt-5 block text-center text-[13px] font-semibold leading-snug text-forest-deep">
-                        Detailed recommendation from soil scientist
+                      <span className="mt-5 flex items-center justify-center gap-1.5 rounded-xl border border-lime-deep/35 bg-lime/15 px-3 py-2 text-center text-[12.5px] font-bold leading-snug text-forest-deep">
+                        <IconCheck className="h-3.5 w-3.5 shrink-0 text-lime-deep" />
+                        Detailed recommendation from our soil scientist
                       </span>
                     ) : null}
 
